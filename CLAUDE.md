@@ -46,6 +46,29 @@ padrão de repetição for claro.
 
 ---
 
+## Desenvolvimento de sites
+
+Sempre que a tarefa envolver criar, desenvolver, redesenhar ou revisar
+um site, landing page, dashboard, web app ou qualquer interface web,
+usar as skills de site nesta ordem:
+
+1. **`ui-ux-pro-max`** — usar ANTES de escrever qualquer código de
+   interface. É a referência de design (estilos, paletas, fontes,
+   componentes, UX). Consultar pra planejar e construir a UI.
+2. **`web-design-guidelines`** — usar DEPOIS de o site estar montado.
+   Revisa o código contra boas práticas de UX e acessibilidade. Rodar
+   antes de entregar/publicar qualquer interface pro cliente.
+
+Antes do visual, respeitar sempre a identidade da marca em
+`identidade/design-guide.md` (cores, fontes, logo). A `ui-ux-pro-max`
+complementa o design-guide, não substitui — quando houver conflito, o
+`identidade/design-guide.md` do projeto manda.
+
+Não pular essas skills "pra ir mais rápido". Site sem passar pela
+`web-design-guidelines` não está pronto pra entregar.
+
+---
+
 ## Aprender com correções
 
 Quando o usuário corrigir algo, melhorar uma resposta ou dar uma
