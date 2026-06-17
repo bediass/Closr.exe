@@ -27,6 +27,14 @@ Detectar com `git rev-parse --is-inside-work-tree`. Se falhar:
    - Se sim: rodar `git init`, criar commit inicial, e `gh repo create <nome> --private --source=. --push`.
    - Se não: instruir o usuário a instalar `gh` (https://cli.github.com/) ou criar o repo manualmente em github.com/new e voltar com a URL.
 
+### Trava de segurança — nunca subir cliente pro repo do framework
+
+ANTES de qualquer push, conferir `git remote get-url origin`. Se o origin apontar pro repositório do **framework** (`bediass/Closr.exe` ou qualquer repo cujo nome seja `Closr.exe`), **parar** e avisar:
+
+> "Atenção: esse workspace está apontando pro repositório do framework, não pro do cliente. Subir aqui misturaria os dados do cliente com o framework. Vou criar um repositório **privado** dedicado pra esse cliente. Confirma o nome? (sugestão: `<slug-do-nome-da-empresa>`)"
+
+Ao confirmar: `git remote remove origin` e criar o repo privado novo com `gh repo create <slug> --private --source=. --remote=origin --push`. Só seguir o fluxo normal depois disso.
+
 ### Commits seguintes (já configurado)
 
 1. Rodar `git status`. Se não tiver mudanças, responder "Tá tudo sincronizado, sem mudança nova" e parar.

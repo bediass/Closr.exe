@@ -142,7 +142,48 @@ Se a pasta já tem nome próprio (não genérico), pular essa fase.
 
 ---
 
-## Fase 6 — Próximos passos
+## Fase 6 — Repositório privado no GitHub
+
+Todo cliente tem o **seu próprio repositório privado** no GitHub — nunca compartilha repo com outro cliente nem com o framework. Isso protege os dados de cada cliente.
+
+### 1. Conferir o `gh` (GitHub CLI)
+
+Rodar `gh auth status`. Se não estiver instalado ou autenticado, avisar:
+
+> "Pra criar o repositório do cliente automaticamente, preciso do GitHub CLI autenticado. Roda `gh auth login` uma vez (escolhe GitHub.com → HTTPS → login pelo navegador) e me avisa. Sem isso, sigo o setup e você cria o repo depois com `/salvar`."
+
+Se não der pra autenticar agora, pular essa fase e seguir.
+
+### 2. Proteger contra repo errado
+
+Conferir o remote atual: `git remote get-url origin`. Se apontar pro repositório do **framework** (`bediass/Closr.exe` ou similar), **remover** antes de qualquer push — esse origin é herança do clone e mandaria dados do cliente pro repo do framework:
+
+```
+git remote remove origin
+```
+
+### 3. Criar o repo privado e subir
+
+Usar o slug do nome da empresa (mesmo da Fase 5). Criar **privado**:
+
+```
+gh repo create <slug> --private --source=. --remote=origin --push
+```
+
+Se o repo já existir, só apontar e subir:
+```
+git remote add origin https://github.com/<usuario>/<slug>.git
+git add . && git commit -m "Setup inicial do Closr.exe — <nome da empresa>"
+git branch -M main && git push -u origin main
+```
+
+Confirmar:
+
+> "Criei o repositório **privado** `<usuario>/<slug>` e subi o setup do cliente. Daqui pra frente é só rodar `/salvar` que ele faz backup nesse repo."
+
+---
+
+## Fase 7 — Próximos passos
 
 > "Pronto. O Closr.exe já te conhece.
 >
