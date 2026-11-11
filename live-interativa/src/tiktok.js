@@ -112,7 +112,10 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
 
     status({ status: 'conectando', usuario: usuarioAlvo, mensagem: `Conectando na live de @${usuarioAlvo}...` });
 
-    const opcoes = { enableExtendedGiftInfo: true };
+    // enableExtendedGiftInfo fica DESLIGADO: buscar a lista de presentes da sala exige o plano
+    // pago (Business) do Euler Stream e derruba a conexão no plano grátis. Nome, valor e imagem
+    // de cada presente já vêm no próprio evento de presente.
+    const opcoes = { enableExtendedGiftInfo: false };
     if (chaveAlvo) opcoes.signApiKey = chaveAlvo;
     conexao = new TikTokLiveConnection(usuarioAlvo, opcoes);
     const c = conexao;
@@ -219,6 +222,8 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
       if (e?.stack) console.error(e.stack);
       if (/rate.?limit|429/i.test(msg)) {
         msg = 'limite grátis do serviço de assinatura (Euler Stream) estourou — coloque uma chave grátis do eulerstream.com no painel';
+      } else if (/business plan|premium/i.test(msg)) {
+        msg = `o serviço de assinatura (Euler Stream) pediu plano pago pra uma função extra (${msg}). Me avise, isso dá pra contornar no código`;
       } else if (/sign|euler|401|403|api.?key|unauthori/i.test(msg)) {
         msg = `o serviço de assinatura (Euler Stream) recusou (${msg}) — coloque uma chave grátis do eulerstream.com no painel`;
       }

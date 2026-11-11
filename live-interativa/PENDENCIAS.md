@@ -40,9 +40,10 @@ O que ficou pronto, o que não consegui testar e o que depende de você.
 
 - **Visual:** estilo placar esportivo de TV (cores chapadas, amarelo de destaque,
   fontes Barlow Condensed + Barlow). Se quiser a cara da sua marca, me passa as cores/logo.
-- **Imagens dos presentes na legenda:** aparecem sozinhas depois da primeira vez
-  que o sistema conectar numa live de verdade (o TikTok manda a lista com as
-  imagens e o sistema guarda no seu computador). Antes disso aparece um ícone de
+- **Imagens dos presentes na legenda:** aparecem sozinhas conforme cada presente
+  chega numa live de verdade (a imagem vem junto com o presente e o sistema guarda
+  no seu computador). A lista completa de presentes da sala não é buscada porque
+  isso exige o plano pago do Euler Stream. Antes disso aparece um ícone de
   caixinha. Os presentes da legenda (Rosa, Rosquinha, Confete, Leão) e os valores
   ficam em `config.json` → `presentes.legenda`. Confere se os valores batem com o
   que aparece no seu TikTok.
