@@ -4,15 +4,16 @@
 // O primeiro a cruzar a linha de chegada vence. Recomeça sozinho.
 
 import {
-  W, COR, FONTE_TITULO, texto, painel, retArredondado, acharOpcao, formatarNumero,
-  easeOutBack, limitar, lerp, cortarNome, comAlfa,
+  W, COR, LAYOUT, FONTE_TITULO, texto, bloco, etiqueta, retArredondado, acharOpcao, formatarNumero,
+  easeOutBack, limitar, lerp, cortarNome,
 } from '../motor.js';
 
 const PADRAO = {
   tamanhoPista: 250,
   passoComentario: 4,
   curtidasPorPasso: 10,
-  passoPorDiamante: 6,
+  turboBase: 10,
+  turboExpoente: 0.6,
   intervaloSegundos: 12,
   corredores: [
     { nome: 'BRASIL', bandeira: 'brasil', palavras: ['brasil', 'br', '1'] },
@@ -25,12 +26,13 @@ const PADRAO = {
 };
 
 const COR_BANDEIRA = {
-  brasil: '#16A34A', argentina: '#60A5FA', portugal: '#DC2626', mexico: '#15803D', eua: '#1D4ED8', japao: '#F43F5E',
+  brasil: '#16A34A', argentina: '#60A5FA', portugal: '#DC2626', mexico: '#15803D', eua: '#1D4ED8', japao: '#E11D48',
 };
 
-const PISTA_X0 = 150;
-const PISTA_X1 = 950;
-const TOPO_PISTAS = 470;
+const PISTA_X0 = 160; // onde a bandeira começa (centro)
+const PISTA_X1 = 900; // onde a bandeira termina (centro)
+const CHEGADA = 968;
+const TOPO_PISTAS = LAYOUT.jogo + 24;
 
 export default class Corrida {
   constructor(motor, cfg) {
@@ -48,7 +50,7 @@ export default class Corrida {
     this.fase = 'correndo';
     this.corredores = this.cfg.corredores.map((c) => ({
       ...c,
-      cor: c.cor || COR_BANDEIRA[c.bandeira] || COR.secundaria,
+      cor: c.cor || COR_BANDEIRA[c.bandeira] || COR.suave,
       progresso: 0,
       exibido: 0,
       turbo: 0,
@@ -59,7 +61,6 @@ export default class Corrida {
     this.ultimo = new Map();
     this.vencedor = -1;
     this.tFim = 0;
-    this.tempo = 0;
   }
 
   palavrasChave() {
@@ -67,11 +68,18 @@ export default class Corrida {
   }
 
   instrucoes() {
-    if (this.fase === 'fim') return [{ texto: `Nova corrida em ${Math.ceil(this.tFim)}s`, cor: COR.ciano }];
-    return [
-      { texto: 'Comente o NÚMERO ou o NOME do país', cor: COR.ouro },
-      { texto: 'Presente = TURBO  •  Curtida = empurrão', cor: COR.suave },
-    ];
+    if (this.fase === 'fim') return [`Nova corrida em ${Math.ceil(this.tFim)}s`];
+    return ['Comente o número ou o nome do país'];
+  }
+
+  // Turbo cresce com o valor do presente, mas não linear: presente caro ajuda muito sem acabar a corrida
+  passosDoPresente(diamantes) {
+    return Math.round(this.cfg.turboBase * Math.pow(Math.max(1, diamantes), this.cfg.turboExpoente));
+  }
+
+  legendaPresente(diamantes) {
+    const pct = Math.max(1, Math.round((this.passosDoPresente(diamantes) / this.cfg.tamanhoPista) * 100));
+    return pct >= 100 ? 'Vitória na hora' : `Turbo +${pct}%`;
   }
 
   acoes() {
@@ -110,8 +118,6 @@ export default class Corrida {
         if (agora - (this.ultimo.get(u.id) || 0) < 1000) return;
         this.ultimo.set(u.id, agora);
         this.empurrar(i, u, this.cfg.passoComentario);
-        const p = this.posicao(i);
-        this.m.explodir(p.x - 50, p.y, [this.corredores[i].cor, '#fff'], 4, 220, { grav: 0, tam: [4, 8], vida: [0.3, 0.6] });
         this.m.som.tocar('ponto');
         break;
       }
@@ -132,13 +138,10 @@ export default class Corrida {
           this.torcida.set(u.id, i);
         }
         const total = ev.presente.diamantes * ev.presente.quantidade;
-        const passos = total * this.cfg.passoPorDiamante;
         const fx = this.m.faixa(total);
-        this.empurrar(i, u, passos, fx === 'pequeno' ? 1.5 : fx === 'medio' ? 3 : 5);
+        this.empurrar(i, u, this.passosDoPresente(total), fx === 'pequeno' ? 1.5 : fx === 'medio' ? 3 : 5);
         const p = this.posicao(i);
-        this.m.explodir(p.x, p.y, [COR.ouro, COR.laranja, '#fff'], fx === 'pequeno' ? 16 : 50, 700);
-        this.m.flutuar(p.x, p.y - 50, 'TURBO!', COR.ouro, 44);
-        if (fx === 'pequeno') this.m.notificar(`TURBO pro ${this.corredores[i].nome}!`, { cor: COR.ouro, usuario: u });
+        this.m.explodir(p.x, p.y, [COR.amarelo, COR.laranja, '#fff'], fx === 'pequeno' ? 12 : 40, 600);
         break;
       }
       case 'seguir':
@@ -155,19 +158,17 @@ export default class Corrida {
     this.vencedor = i;
     this.vitorias[i]++;
     this.tFim = this.cfg.intervaloSegundos;
-    this.m.confete(220);
+    this.m.confete(200);
     this.m.som.tocar('vitoria');
-    this.m.flash(this.corredores[i].cor, 0.5);
   }
 
   atualizar(dt) {
-    this.tempo += dt;
-    for (const c of this.corredores) {
+    for (const [k, c] of this.corredores.entries()) {
       c.exibido = lerp(c.exibido, c.progresso, Math.min(1, dt * (c.turbo > 0 ? 10 : 5)));
       c.turbo = Math.max(0, c.turbo - dt);
-      if (c.turbo > 0 && Math.random() < 0.6) {
-        const p = this.posicao(this.corredores.indexOf(c));
-        this.m.explodir(p.x - 55, p.y + (Math.random() - 0.5) * 30, [COR.laranja, COR.ouro, COR.destaque], 1, 260, { grav: -100, tam: [6, 12], vida: [0.2, 0.45] });
+      if (c.turbo > 0 && Math.random() < 0.5) {
+        const p = this.posicao(k);
+        this.m.explodir(p.x - 50, p.y + (Math.random() - 0.5) * 24, [COR.laranja, COR.amarelo], 1, 220, { grav: 0, tam: [6, 12], vida: [0.2, 0.4] });
       }
     }
     if (this.fase === 'fim') {
@@ -177,14 +178,12 @@ export default class Corrida {
   }
 
   alturaPista() {
-    const n = this.corredores.length;
-    return Math.min(108, Math.floor(660 / n));
+    return Math.min(104, Math.floor(640 / this.corredores.length));
   }
 
   posicao(i) {
     const h = this.alturaPista();
-    const c = this.corredores[i];
-    const frac = limitar(c.exibido / this.cfg.tamanhoPista, 0, 1);
+    const frac = limitar(this.corredores[i].exibido / this.cfg.tamanhoPista, 0, 1);
     return { x: PISTA_X0 + (PISTA_X1 - PISTA_X0) * frac, y: TOPO_PISTAS + i * h + h / 2 };
   }
 
@@ -196,78 +195,71 @@ export default class Corrida {
     const h = this.alturaPista();
     const ordem = this.ordem();
     const posicaoDe = new Map(ordem.map((o, k) => [o.i, k + 1]));
+    const altura = h * this.corredores.length;
 
-    // pista
-    painel(ctx, 24, TOPO_PISTAS - 18, W - 48, h * this.corredores.length + 36, { r: 28, fundo: 'rgba(12, 8, 32, 0.78)' });
+    // pistas
+    this.corredores.forEach((c, i) => {
+      const y = TOPO_PISTAS + i * h;
+      ctx.fillStyle = i % 2 ? COR.superficie : COR.superficie2;
+      ctx.fillRect(36, y, W - 72, h);
+      // número do corredor
+      const atalho = String(c.palavras[c.palavras.length - 1] || '').toUpperCase();
+      ctx.fillStyle = COR.amarelo;
+      ctx.fillRect(36, y, 64, h);
+      texto(ctx, atalho, 68, y + h / 2 + 1, { tam: 44, fonte: FONTE_TITULO, peso: 800, cor: COR.tinta, maxLarg: 56 });
+      // rastro
+      const p = this.posicao(i);
+      ctx.fillStyle = c.cor;
+      ctx.globalAlpha = 0.45;
+      ctx.fillRect(PISTA_X0 - 40, y + h / 2 - 4, Math.max(0, p.x - PISTA_X0), 8);
+      ctx.globalAlpha = 1;
+    });
     // linha de chegada quadriculada
-    const q = 16;
-    for (let y = TOPO_PISTAS - 6; y < TOPO_PISTAS + h * this.corredores.length + 6; y += q) {
-      for (let k = 0; k < 2; k++) {
-        ctx.fillStyle = (Math.floor((y - TOPO_PISTAS) / q) + k) % 2 ? '#fff' : '#111';
-        ctx.fillRect(PISTA_X1 + 50 + k * q, y, q, q);
+    const q = 14;
+    for (let y = TOPO_PISTAS, k = 0; y < TOPO_PISTAS + altura; y += q, k++) {
+      for (let j = 0; j < 3; j++) {
+        ctx.fillStyle = (k + j) % 2 ? '#fff' : '#111';
+        ctx.fillRect(CHEGADA + j * q, y, q, Math.min(q, TOPO_PISTAS + altura - y));
       }
     }
 
-    this.corredores.forEach((c, i) => {
-      const y = TOPO_PISTAS + i * h;
-      // faixa da pista
-      ctx.fillStyle = i % 2 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.06)';
-      ctx.fillRect(40, y + 3, W - 80, h - 6);
-      // nome grande de fundo
-      texto(ctx, c.nome, 560, y + h / 2 + 2, { tam: Math.min(64, h * 0.62), fonte: FONTE_TITULO, peso: 400, cor: comAlfa(c.cor.startsWith('#') ? c.cor : '#A78BFA', 0.28), contorno: 0 });
-      // número/atalho
-      const atalho = String(c.palavras[c.palavras.length - 1] || '').toUpperCase();
-      painel(ctx, 50, y + h / 2 - 28, 70, 56, { r: 16, fundo: 'rgba(12,8,32,0.9)', borda: COR.ouro });
-      texto(ctx, atalho, 85, y + h / 2 + 2, { tam: 34, fonte: FONTE_TITULO, peso: 400, cor: COR.ouro, contorno: 0, maxLarg: 60 });
-      // trilha percorrida
-      const p = this.posicao(i);
-      const g = ctx.createLinearGradient(PISTA_X0, 0, p.x, 0);
-      g.addColorStop(0, comAlfa(c.cor.startsWith('#') ? c.cor : '#A78BFA', 0));
-      g.addColorStop(1, comAlfa(c.cor.startsWith('#') ? c.cor : '#A78BFA', 0.55));
-      ctx.fillStyle = g;
-      ctx.fillRect(PISTA_X0, y + h / 2 - 6, Math.max(0, p.x - PISTA_X0), 12);
-    });
-
-    // corredores (desenhados por cima das faixas)
+    // corredores
     this.corredores.forEach((c, i) => {
       const p = this.posicao(i);
-      const bal = Math.sin(this.m.t * 10 + i) * (c.turbo > 0 ? 4 : 2);
-      const fw = Math.min(96, h * 0.95);
-      const fh = fw * 0.66;
-      ctx.save();
-      ctx.translate(p.x, p.y + bal);
-      ctx.rotate(Math.sin(this.m.t * 6 + i) * 0.05);
-      ctx.shadowColor = c.turbo > 0 ? COR.ouro : 'rgba(0,0,0,0.6)';
-      ctx.shadowBlur = c.turbo > 0 ? 30 : 12;
-      retArredondado(ctx, -fw / 2, -fh / 2, fw, fh, 8);
+      const bal = Math.sin(this.m.t * 10 + i) * (c.turbo > 0 ? 3 : 1.5);
+      const fh = h * 0.56;
+      const fw = fh * 1.5;
+      const x = p.x - fw / 2;
+      const y = p.y - fh / 2 + bal;
       ctx.fillStyle = '#000';
-      ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.fillRect(x + 5, y + 5, fw, fh);
       ctx.save();
-      retArredondado(ctx, -fw / 2, -fh / 2, fw, fh, 8);
+      retArredondado(ctx, x, y, fw, fh, 4);
       ctx.clip();
-      desenharBandeira(ctx, c, -fw / 2, -fh / 2, fw, fh);
+      desenharBandeira(ctx, c, x, y, fw, fh);
       ctx.restore();
-      retArredondado(ctx, -fw / 2, -fh / 2, fw, fh, 8);
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 3;
       ctx.strokeStyle = '#fff';
+      retArredondado(ctx, x, y, fw, fh, 4);
       ctx.stroke();
-      ctx.restore();
-      // posição (1º, 2º...)
+      // nome + posição ao lado da bandeira (vai pra esquerda quando chega perto da chegada)
       const pos = posicaoDe.get(i);
-      if (c.progresso > 0) {
-        texto(ctx, `${pos}º`, p.x + fw / 2 + 30, p.y + 2, { tam: 30, fonte: FONTE_TITULO, peso: 400, cor: pos === 1 ? COR.ouro : COR.suave, contorno: 5 });
-      }
+      const rotulo = c.progresso > 0 ? `${pos}º ${c.nome}` : c.nome;
+      const perto = p.x > 640;
+      texto(ctx, rotulo, perto ? x - 14 : x + fw + 14, p.y + 1, {
+        tam: 30, alinhar: perto ? 'right' : 'left', fonte: FONTE_TITULO, peso: 800,
+        cor: pos === 1 && c.progresso > 0 ? COR.amarelo : COR.texto,
+      });
     });
 
-    // vitórias da noite + líder
-    const yb = TOPO_PISTAS + h * this.corredores.length + 50;
+    // linha de status
+    const yb = TOPO_PISTAS + altura + 50;
     const lider = ordem[0];
-    if (lider && lider.c.progresso > 0 && this.fase === 'correndo') {
-      const falta = Math.max(0, Math.round(100 - (lider.c.progresso / this.cfg.tamanhoPista) * 100));
-      texto(ctx, `${lider.c.nome} na frente — falta ${falta}%`, W / 2, yb, { tam: 36, cor: COR.ouro });
-    } else if (this.fase === 'correndo') {
-      texto(ctx, 'Valendo! Quem larga primeiro?', W / 2, yb, { tam: 36, cor: COR.ouro });
+    if (this.fase === 'correndo') {
+      const str = lider && lider.c.progresso > 0
+        ? `${lider.c.nome} NA FRENTE · FALTA ${Math.max(0, Math.round(100 - (lider.c.progresso / this.cfg.tamanhoPista) * 100))}%`
+        : 'VALENDO! QUEM LARGA PRIMEIRO?';
+      texto(ctx, str, W / 2, yb, { tam: 38, fonte: FONTE_TITULO, peso: 800, cor: COR.amarelo, espaco: 1 });
     }
     const vit = this.corredores
       .map((c, i) => ({ nome: c.nome, v: this.vitorias[i] }))
@@ -275,8 +267,8 @@ export default class Corrida {
       .sort((a, b) => b.v - a.v)
       .slice(0, 4)
       .map((x) => `${x.nome} ${x.v}`)
-      .join('  •  ');
-    if (vit) texto(ctx, `VITÓRIAS DA NOITE: ${vit}`, W / 2, yb + 52, { tam: 28, cor: COR.suave, contorno: 0, maxLarg: 1000 });
+      .join('  ·  ');
+    if (vit) texto(ctx, `VITÓRIAS DA NOITE   ${vit}`, W / 2, yb + 50, { tam: 28, fonte: FONTE_TITULO, peso: 800, cor: COR.suave, espaco: 1, maxLarg: 1000 });
 
     if (this.fase === 'fim') this.desenharFim(ctx);
   }
@@ -284,30 +276,24 @@ export default class Corrida {
   desenharFim(ctx) {
     const c = this.corredores[this.vencedor];
     const t0 = this.cfg.intervaloSegundos - this.tFim;
-    const ent = easeOutBack(limitar(t0 * 2.5, 0, 1));
+    const ent = easeOutBack(limitar(t0 * 3, 0, 1));
     ctx.save();
-    ctx.fillStyle = `rgba(8, 6, 24, ${0.75 * limitar(t0 * 3, 0, 1)})`;
-    ctx.fillRect(0, 0, W, 1920);
-    ctx.translate(W / 2, 780);
+    ctx.fillStyle = `rgba(10, 11, 13, ${0.8 * limitar(t0 * 4, 0, 1)})`;
+    ctx.fillRect(0, LAYOUT.jogo - 10, W, 1920);
+    ctx.translate(W / 2, 800);
     ctx.scale(ent, ent);
-    painel(ctx, -480, -330, 960, 660, { r: 44, fundo: 'rgba(12, 8, 32, 0.95)', borda: COR.ouro, brilho: COR.ouro });
-    texto(ctx, 'CAMPEÃO DA CORRIDA', 0, -270, { tam: 48, fonte: FONTE_TITULO, peso: 400, cor: COR.ouro });
-    ctx.save();
-    retArredondado(ctx, -120, -230, 240, 160, 14);
-    ctx.clip();
-    desenharBandeira(ctx, c, -120, -230, 240, 160);
-    ctx.restore();
-    retArredondado(ctx, -120, -230, 240, 160, 14);
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = '#fff';
-    ctx.stroke();
-    texto(ctx, c.nome, 0, -10, { tam: 96, fonte: FONTE_TITULO, peso: 400, cor: COR.texto, brilho: COR.ouro, maxLarg: 900 });
+    bloco(ctx, -470, -300, 940, 600, { r: 16, cor: COR.texto, sombra: 14 });
+    etiqueta(ctx, 'CAMPEÃO DA CORRIDA', 0, -300, { tam: 36 });
+    ctx.fillStyle = '#000';
+    ctx.fillRect(-120 + 8, -240 + 8, 240, 160);
+    desenharBandeira(ctx, c, -120, -240, 240, 160);
+    texto(ctx, c.nome, 0, -10, { tam: 120, fonte: FONTE_TITULO, peso: 800, italico: true, cor: COR.tinta, maxLarg: 880 });
     const fas = [...c.fas.values()].sort((a, b) => b.valor - a.valor).slice(0, 3);
-    if (fas.length) texto(ctx, 'Maiores torcedores:', 0, 80, { tam: 34, cor: COR.suave, contorno: 0 });
+    if (fas.length) texto(ctx, 'MAIORES TORCEDORES', 0, 80, { tam: 30, fonte: FONTE_TITULO, peso: 800, cor: '#555', espaco: 2 });
     fas.forEach((f, k) => {
-      const x = (k - (fas.length - 1) / 2) * 290;
-      this.m.desenharAvatar(ctx, f.usuario, x, 170, 50, [COR.ouro, '#E2E8F0', '#F59E0B'][k]);
-      texto(ctx, cortarNome(f.usuario.nome, 12), x, 250, { tam: 30, maxLarg: 270 });
+      const x = (k - (fas.length - 1) / 2) * 280;
+      this.m.desenharAvatar(ctx, f.usuario, x, 170, 46, k === 0 ? COR.amarelo : null);
+      texto(ctx, cortarNome(f.usuario.nome, 12), x, 248, { tam: 30, peso: 700, cor: COR.tinta, maxLarg: 260 });
     });
     ctx.restore();
   }
@@ -410,11 +396,11 @@ export function desenharBandeira(ctx, c, x, y, w, h) {
       break;
     default: {
       // Bandeira genérica: "cores": ["#hex", ...] e "orientacao": "h" ou "v"
-      const cores = Array.isArray(c.cores) && c.cores.length ? c.cores : [c.cor || COR.secundaria];
+      const cores = Array.isArray(c.cores) && c.cores.length ? c.cores : [c.cor || COR.suave];
       if (c.orientacao === 'v') faixasV(cores);
       else faixasH(cores);
       if (cores.length === 1) {
-        texto(ctx, String(c.nome || '?').charAt(0), x + w / 2, y + h / 2 + 2, { tam: h * 0.7, fonte: FONTE_TITULO, peso: 400, contorno: 4 });
+        texto(ctx, String(c.nome || '?').charAt(0), x + w / 2, y + h / 2 + 2, { tam: h * 0.7, fonte: FONTE_TITULO, peso: 800, contorno: 4 });
       }
     }
   }

@@ -4,8 +4,8 @@
 // A rodada tem tempo; quem tiver mais pontos no fim vence. Depois recomeça sozinho.
 
 import {
-  W, COR, FONTE_TITULO, texto, painel, retArredondado, acharOpcao, formatarNumero,
-  desenharRelogio, easeOutBack, limitar, clarear, comAlfa, cortarNome, lerp,
+  W, COR, LAYOUT, FONTE_TITULO, texto, bloco, etiqueta, retArredondado, acharOpcao, formatarNumero,
+  desenharRelogio, easeOutBack, limitar, escurecer, cortarNome, lerp,
 } from '../motor.js';
 
 const PADRAO = {
@@ -17,10 +17,12 @@ const PADRAO = {
   pontosPorSeguir: 20,
   pontosPorCompartilhar: 10,
   times: [
-    { nome: 'AZUL', cor: '#3B82F6', palavras: ['azul', '1'] },
-    { nome: 'VERMELHO', cor: '#F43F5E', palavras: ['vermelho', '2'] },
+    { nome: 'AZUL', cor: '#3D7BFF', palavras: ['azul', '1'] },
+    { nome: 'VERMELHO', cor: '#FF4D4D', palavras: ['vermelho', '2'] },
   ],
 };
+
+const Y0 = LAYOUT.jogo; // topo da área do jogo
 
 export default class Batalha {
   constructor(motor, cfg) {
@@ -30,7 +32,7 @@ export default class Batalha {
     this.cfg.times = this.cfg.times.slice(0, 4);
     this.titulo = 'BATALHA DE TIMES';
     this.vitorias = this.cfg.times.map(() => 0);
-    this.yNotificacoes = 1250;
+    this.yNotificacoes = 1240;
     this.novaRodada();
   }
 
@@ -47,16 +49,16 @@ export default class Batalha {
   }
 
   palavrasChave() {
-    return this.times.map((t) => normal(t.palavras[0]));
+    return this.times.map((t) => String(t.palavras[0]).toLowerCase());
   }
 
   instrucoes() {
-    if (this.fase === 'fim') return [{ texto: `Nova rodada em ${Math.ceil(this.tFim)}s — escolha seu time!`, cor: COR.ciano }];
-    const nomes = this.times.map((t) => t.nome).join(' ou ');
-    return [
-      { texto: `Comente ${nomes} pra entrar no time`, cor: COR.ouro },
-      { texto: 'Cada comentário = ponto  •  Presentes valem MUITO', cor: COR.suave },
-    ];
+    if (this.fase === 'fim') return [`Nova rodada em ${Math.ceil(this.tFim)}s`];
+    return [`Comente ${this.times.map((t) => t.nome).join(' ou ')} e ajude seu time`];
+  }
+
+  legendaPresente(diamantes) {
+    return `+${formatarNumero(diamantes * this.cfg.pontosPorDiamante)} pts`;
   }
 
   acoes() {
@@ -76,8 +78,8 @@ export default class Batalha {
   }
 
   // ---------- regras ----------
-  timeDo(usuario, texto) {
-    const escolhido = texto ? acharOpcao(texto, this.times) : -1;
+  timeDo(usuario, txt) {
+    const escolhido = txt ? acharOpcao(txt, this.times) : -1;
     if (escolhido >= 0 && !this.membro.has(usuario.id)) {
       this.membro.set(usuario.id, escolhido);
       this.times[escolhido].membros.add(usuario.id);
@@ -86,7 +88,7 @@ export default class Batalha {
     return this.membro.has(usuario.id) ? this.membro.get(usuario.id) : -1;
   }
 
-  // Quem manda presente sem ter time vai pro time mais fraco (ajuda o equilíbrio)
+  // Quem manda presente sem ter time vai pro time mais fraco
   timeMaisFraco() {
     let idx = 0;
     this.times.forEach((t, i) => {
@@ -104,11 +106,9 @@ export default class Batalha {
     c.valor += pts;
     c.usuario = usuario;
     this.contrib.set(usuario.id, c);
-    if (mostrar) {
-      // números saem pelas laterais do placar pra não cobrir o valor
-      const { x, y } = this.centroCard(i);
-      const lado = Math.random() < 0.5 ? -1 : 1;
-      this.m.flutuar(x + lado * (175 + Math.random() * 30), y + 10, `+${formatarNumero(pts)}`, clarear(t.cor, 0.5), pts >= 100 ? 48 : 36);
+    if (mostrar && pts >= 10) {
+      const c2 = this.layout()[i];
+      this.m.flutuar(c2.x + c2.w / 2, c2.y + 40, `+${formatarNumero(pts)}`, COR.amarelo, 52);
     }
   }
 
@@ -132,7 +132,7 @@ export default class Batalha {
         const acum = (this.curtidasAcum.get(u.id) || 0) + ev.curtidas;
         const pts = Math.floor(acum / this.cfg.curtidasPorPonto);
         this.curtidasAcum.set(u.id, acum - pts * this.cfg.curtidasPorPonto);
-        this.pontuar(i, u, pts, pts >= 3);
+        this.pontuar(i, u, pts, false);
         break;
       }
       case 'presente': {
@@ -143,12 +143,10 @@ export default class Batalha {
           this.times[i].membros.add(u.id);
         }
         const total = ev.presente.diamantes * ev.presente.quantidade;
-        const pts = total * this.cfg.pontosPorDiamante;
-        this.pontuar(i, u, pts);
-        const { x, y } = this.centroCard(i);
+        this.pontuar(i, u, total * this.cfg.pontosPorDiamante);
+        const c = this.layout()[i];
         const fx = this.m.faixa(total);
-        this.m.explodir(x, y, [this.times[i].cor, COR.ouro, '#fff'], fx === 'pequeno' ? 18 : 60, fx === 'pequeno' ? 500 : 1000);
-        if (fx === 'pequeno') this.m.notificar(`+${formatarNumero(pts)} pro time ${this.times[i].nome}`, { cor: this.times[i].cor, usuario: u });
+        this.m.explodir(c.x + c.w / 2, c.y + c.h / 2, [this.times[i].cor, COR.amarelo, '#fff'], fx === 'pequeno' ? 14 : 50, fx === 'pequeno' ? 450 : 900);
         break;
       }
       case 'seguir': {
@@ -170,12 +168,11 @@ export default class Batalha {
     const max = Math.max(...this.times.map((t) => t.pontos));
     const lideres = this.times.map((t, i) => (t.pontos === max ? i : -1)).filter((i) => i >= 0);
     if (max === 0 || lideres.length > 1) {
-      this.vencedor = -1; // empate
-      this.m.anunciar({ titulo: 'EMPATE!', sub: 'Ninguém levou essa. Próxima rodada!', cor: COR.ciano, dur: 3 });
+      this.vencedor = -1;
     } else {
       this.vencedor = lideres[0];
       this.vitorias[this.vencedor]++;
-      this.m.confete(220);
+      this.m.confete(200);
       this.m.som.tocar('vitoria');
     }
   }
@@ -183,7 +180,7 @@ export default class Batalha {
   atualizar(dt) {
     for (const t of this.times) {
       t.exibido = lerp(t.exibido, t.pontos, Math.min(1, dt * 8));
-      t.pulso = Math.max(0, t.pulso - dt * 3);
+      t.pulso = Math.max(0, t.pulso - dt * 4);
     }
     if (this.fase === 'jogando') {
       const antes = Math.ceil(this.restante);
@@ -199,19 +196,10 @@ export default class Batalha {
   // ---------- desenho ----------
   layout() {
     const n = this.times.length;
-    const linhas = n <= 2 ? 1 : 2;
-    const h = linhas === 1 ? 330 : 230;
+    const duasLinhas = n > 2;
+    const h = duasLinhas ? 220 : 340;
     const w = 480;
-    return this.times.map((_, i) => {
-      const col = i % 2;
-      const lin = Math.floor(i / 2);
-      return { x: 40 + col * 520, y: 590 + lin * (h + 24), w, h };
-    });
-  }
-
-  centroCard(i) {
-    const c = this.layout()[i];
-    return { x: c.x + c.w / 2, y: c.y + c.h / 2 };
+    return this.times.map((_, i) => ({ x: 48 + (i % 2) * 504, y: Y0 + 110 + Math.floor(i / 2) * (h + 24), w, h }));
   }
 
   topDoTime(i) {
@@ -226,110 +214,90 @@ export default class Batalha {
     const lider = this.times.reduce((b, t, i) => (t.pontos > this.times[b].pontos ? i : b), 0);
     const temLider = this.times.some((t) => t.pontos > 0) && this.times.filter((t) => t.pontos === this.times[lider].pontos).length === 1;
 
-    // relógio
-    if (this.fase === 'jogando') desenharRelogio(ctx, W / 2, 510, 62, this.restante, this.cfg.duracaoSegundos);
+    if (this.fase === 'jogando') desenharRelogio(ctx, W / 2, Y0 + 42, 46, this.restante, this.cfg.duracaoSegundos);
 
-    // cartões dos times
+    // cartões dos times: bloco de cor sólida
     this.times.forEach((t, i) => {
       const c = cards[i];
-      const esc = 1 + 0.04 * t.pulso;
-      ctx.save();
-      ctx.translate(c.x + c.w / 2, c.y + c.h / 2);
-      ctx.scale(esc, esc);
-      ctx.translate(-(c.x + c.w / 2), -(c.y + c.h / 2));
-      const brilho = temLider && i === lider ? t.cor : null;
-      painel(ctx, c.x, c.y, c.w, c.h, { r: 32, fundo: comAlfa(t.cor, 0.18), borda: t.cor, brilho });
+      const sobe = -6 * t.pulso;
       const compacto = c.h < 300;
-      texto(ctx, t.nome, c.x + c.w / 2, c.y + (compacto ? 44 : 56), { tam: compacto ? 44 : 54, fonte: FONTE_TITULO, peso: 400, cor: clarear(t.cor, 0.35), maxLarg: c.w - 40 });
-      texto(ctx, formatarNumero(t.exibido), c.x + c.w / 2, c.y + (compacto ? 116 : 150), { tam: compacto ? 76 : 104, fonte: FONTE_TITULO, peso: 400, cor: COR.texto, brilho: t.cor });
-      texto(ctx, `${t.membros.size} no time`, c.x + c.w / 2, c.y + (compacto ? 170 : 222), { tam: 30, cor: COR.suave, contorno: 0 });
+      bloco(ctx, c.x, c.y + sobe, c.w, c.h, { r: 14, cor: t.cor, sombra: 10 });
+      texto(ctx, t.nome, c.x + 28, c.y + sobe + 44, { tam: compacto ? 40 : 48, alinhar: 'left', fonte: FONTE_TITULO, peso: 800, italico: true, maxLarg: c.w - 200 });
+      texto(ctx, `${t.membros.size} no time`, c.x + c.w - 24, c.y + sobe + 44, { tam: 26, alinhar: 'right', peso: 600, cor: 'rgba(255,255,255,0.8)' });
+      texto(ctx, formatarNumero(t.exibido), c.x + c.w / 2, c.y + sobe + (compacto ? 128 : 170), { tam: compacto ? 104 : 150, fonte: FONTE_TITULO, peso: 800 });
       if (!compacto) {
         const top = this.topDoTime(i);
+        const fy = c.y + sobe + c.h - 50;
+        ctx.fillStyle = escurecer(t.cor, 0.3);
+        ctx.fillRect(c.x, fy - 26, c.w, 4);
         if (top) {
-          this.m.desenharAvatar(ctx, top.usuario, c.x + 62, c.y + c.h - 46, 26, COR.ouro);
-          texto(ctx, `MVP ${cortarNome(top.usuario.nome, 12)}`, c.x + 100, c.y + c.h - 44, { tam: 28, alinhar: 'left', cor: COR.ouro, contorno: 0, maxLarg: c.w - 130 });
+          this.m.desenharAvatar(ctx, top.usuario, c.x + 50, fy + 6, 22);
+          texto(ctx, `MVP  ${cortarNome(top.usuario.nome, 14)}`, c.x + 84, fy + 7, { tam: 28, alinhar: 'left', peso: 700, maxLarg: c.w - 110 });
+        } else {
+          texto(ctx, `Comente ${String(t.palavras[0]).toUpperCase()}`, c.x + c.w / 2, fy + 7, { tam: 28, peso: 700, cor: 'rgba(255,255,255,0.85)' });
         }
       }
-      if (temLider && i === lider && this.fase === 'jogando') {
-        painel(ctx, c.x + c.w / 2 - 90, c.y - 22, 180, 44, { r: 22, fundo: COR.ouro, borda: null });
-        texto(ctx, 'NA FRENTE', c.x + c.w / 2, c.y, { tam: 26, cor: '#1a1206', contorno: 0 });
-      }
-      ctx.restore();
+      if (temLider && i === lider && this.fase === 'jogando') etiqueta(ctx, 'NA FRENTE', c.x + c.w / 2, c.y + sobe, { tam: 26 });
     });
 
-    // barra de cabo de guerra
+    // barra de disputa
     const ultimo = cards[cards.length - 1];
-    const by = ultimo.y + ultimo.h + 44;
-    const bx = 40;
-    const bw = W - 80;
-    const bh = 64;
+    const by = ultimo.y + ultimo.h + 48;
+    const bx = 48;
+    const bw = W - 96;
+    const bh = 52;
     ctx.save();
-    retArredondado(ctx, bx, by, bw, bh, bh / 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    retArredondado(ctx, bx, by, bw, bh, 10);
+    ctx.fillStyle = COR.superficie;
     ctx.fill();
     ctx.clip();
     let x = bx;
     this.times.forEach((t) => {
       const frac = total > 0 ? t.exibido / total : 1 / this.times.length;
       const w = bw * frac;
-      const g = ctx.createLinearGradient(0, by, 0, by + bh);
-      g.addColorStop(0, clarear(t.cor, 0.25));
-      g.addColorStop(1, t.cor);
-      ctx.fillStyle = g;
+      ctx.fillStyle = t.cor;
       ctx.fillRect(x, by, w + 1, bh);
-      if (w > 120) texto(ctx, `${Math.round(frac * 100)}%`, x + w / 2, by + bh / 2 + 2, { tam: 34, contorno: 4 });
+      if (w > 110) texto(ctx, `${Math.round(frac * 100)}%`, x + w / 2, by + bh / 2 + 1, { tam: 34, fonte: FONTE_TITULO, peso: 800 });
       x += w;
+      ctx.fillStyle = '#fff';
+      if (x < bx + bw - 2) ctx.fillRect(x - 2, by, 4, bh);
     });
     ctx.restore();
-    // faísca na divisa (só com 2 times)
-    if (this.times.length === 2 && total > 0) {
-      const sx = bx + (bw * this.times[0].exibido) / total;
-      ctx.save();
-      ctx.shadowColor = '#fff';
-      ctx.shadowBlur = 30;
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(sx, by + bh / 2, 14 + 4 * Math.sin(this.m.t * 12), 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-      if (Math.random() < 0.3) this.m.explodir(sx, by + bh / 2, ['#fff', COR.ouro], 1, 300, { grav: 600, tam: [3, 6], vida: [0.2, 0.5] });
-    }
 
     // placar da noite
-    const py = by + bh + 50;
-    const placar = this.times.map((t, i) => `${t.nome} ${this.vitorias[i]}`).join('   •   ');
-    texto(ctx, `VITÓRIAS DA NOITE:  ${placar}`, W / 2, py, { tam: 30, cor: COR.suave, contorno: 0, maxLarg: 1000 });
+    const placar = this.times.map((t, i) => `${t.nome} ${this.vitorias[i]}`).join('  ×  ');
+    texto(ctx, `VITÓRIAS DA NOITE   ${placar}`, W / 2, by + bh + 46, { tam: 30, fonte: FONTE_TITULO, peso: 800, cor: COR.suave, espaco: 1, maxLarg: 1000 });
 
     if (this.fase === 'fim') this.desenharFim(ctx);
   }
 
   desenharFim(ctx) {
     const t0 = this.cfg.intervaloSegundos - this.tFim;
-    const ent = easeOutBack(limitar(t0 * 2.5, 0, 1));
+    const ent = easeOutBack(limitar(t0 * 3, 0, 1));
     ctx.save();
-    ctx.fillStyle = `rgba(8, 6, 24, ${0.75 * limitar(t0 * 3, 0, 1)})`;
-    ctx.fillRect(0, 0, W, 1920);
-    ctx.translate(W / 2, 760);
+    ctx.fillStyle = `rgba(10, 11, 13, ${0.8 * limitar(t0 * 4, 0, 1)})`;
+    ctx.fillRect(0, LAYOUT.jogo - 10, W, 1920);
+    ctx.translate(W / 2, 800);
     ctx.scale(ent, ent);
     if (this.vencedor >= 0) {
       const t = this.times[this.vencedor];
-      painel(ctx, -480, -300, 960, 600, { r: 44, fundo: 'rgba(12, 8, 32, 0.95)', borda: t.cor, brilho: t.cor });
-      texto(ctx, 'VENCEDOR', 0, -220, { tam: 50, cor: COR.ouro, fonte: FONTE_TITULO, peso: 400 });
-      texto(ctx, `TIME ${t.nome}`, 0, -130, { tam: 92, fonte: FONTE_TITULO, peso: 400, cor: clarear(t.cor, 0.3), brilho: t.cor, maxLarg: 900 });
-      texto(ctx, `${formatarNumero(t.pontos)} pontos`, 0, -40, { tam: 48 });
-      // top 3 do time vencedor
+      bloco(ctx, -470, -290, 940, 580, { r: 16, cor: t.cor, sombra: 14 });
+      etiqueta(ctx, 'VENCEDOR', 0, -290, { tam: 36 });
+      texto(ctx, `TIME ${t.nome}`, 0, -190, { tam: 110, fonte: FONTE_TITULO, peso: 800, italico: true, maxLarg: 880 });
+      texto(ctx, `${formatarNumero(t.pontos)} pontos`, 0, -100, { tam: 48, peso: 700 });
       const tops = [...this.contrib.values()].filter((c) => c.time === this.vencedor).sort((a, b) => b.valor - a.valor).slice(0, 3);
-      texto(ctx, tops.length ? 'Quem carregou o time:' : '', 0, 40, { tam: 34, cor: COR.suave, contorno: 0 });
+      if (tops.length) texto(ctx, 'QUEM CARREGOU O TIME', 0, -20, { tam: 30, fonte: FONTE_TITULO, peso: 800, cor: 'rgba(255,255,255,0.85)', espaco: 2 });
       tops.forEach((c, i) => {
         const x = (i - (tops.length - 1) / 2) * 290;
-        this.m.desenharAvatar(ctx, c.usuario, x, 140, 52, [COR.ouro, '#E2E8F0', '#F59E0B'][i]);
-        texto(ctx, cortarNome(c.usuario.nome, 12), x, 222, { tam: 30, maxLarg: 270 });
-        texto(ctx, `${formatarNumero(c.valor)} pts`, x, 262, { tam: 28, cor: COR.ouro, contorno: 0 });
+        bloco(ctx, x - 130, 20, 260, 230, { r: 12, cor: escurecer(t.cor, 0.35) });
+        this.m.desenharAvatar(ctx, c.usuario, x, 90, 46, i === 0 ? COR.amarelo : null);
+        texto(ctx, cortarNome(c.usuario.nome, 12), x, 166, { tam: 30, peso: 700, maxLarg: 240 });
+        texto(ctx, `${formatarNumero(c.valor)} pts`, x, 210, { tam: 34, fonte: FONTE_TITULO, peso: 800, cor: COR.amarelo });
       });
     } else {
-      painel(ctx, -420, -160, 840, 320, { r: 44, fundo: 'rgba(12, 8, 32, 0.95)', borda: COR.ciano });
-      texto(ctx, 'EMPATE!', 0, -40, { tam: 110, fonte: FONTE_TITULO, peso: 400, cor: COR.ciano, brilho: COR.ciano });
-      texto(ctx, 'Bora desempatar na próxima', 0, 70, { tam: 42 });
+      bloco(ctx, -420, -150, 840, 300, { r: 16, cor: COR.texto, sombra: 14 });
+      texto(ctx, 'EMPATE!', 0, -30, { tam: 140, fonte: FONTE_TITULO, peso: 800, italico: true, cor: COR.tinta });
+      texto(ctx, 'Bora desempatar na próxima', 0, 80, { tam: 42, peso: 700, cor: COR.tinta });
     }
     ctx.restore();
   }
@@ -342,8 +310,4 @@ export default class Batalha {
       ranking: [...this.contrib.values()].sort((a, b) => b.valor - a.valor).slice(0, 5).map((c) => ({ nome: c.usuario.nome, valor: c.valor, extra: this.times[c.time]?.nome })),
     };
   }
-}
-
-function normal(s) {
-  return String(s || '').toLowerCase();
 }

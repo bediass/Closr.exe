@@ -30,3 +30,4 @@ live-interativa/config/tiktok.local.json
 
 # Cache do Python
 __pycache__/
+live-interativa/config/presentes-imagens.local.json

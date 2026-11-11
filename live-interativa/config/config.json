@@ -15,7 +15,38 @@
       "medio": 10,
       "grande": 100,
       "lendario": 1000
-    }
+    },
+    "legenda": [
+      {
+        "nome": "Rosa",
+        "apelidos": [
+          "rose"
+        ],
+        "diamantes": 1
+      },
+      {
+        "nome": "Rosquinha",
+        "apelidos": [
+          "doughnut",
+          "donut"
+        ],
+        "diamantes": 30
+      },
+      {
+        "nome": "Confete",
+        "apelidos": [
+          "confetti"
+        ],
+        "diamantes": 100
+      },
+      {
+        "nome": "Leão",
+        "apelidos": [
+          "lion"
+        ],
+        "diamantes": 29999
+      }
+    ]
   },
   "batalha": {
     "duracaoSegundos": 180,
@@ -28,7 +59,7 @@
     "times": [
       {
         "nome": "AZUL",
-        "cor": "#3B82F6",
+        "cor": "#3D7BFF",
         "palavras": [
           "azul",
           "1"
@@ -36,7 +67,7 @@
       },
       {
         "nome": "VERMELHO",
-        "cor": "#F43F5E",
+        "cor": "#FF4D4D",
         "palavras": [
           "vermelho",
           "2"
@@ -48,7 +79,6 @@
     "tamanhoPista": 250,
     "passoComentario": 4,
     "curtidasPorPasso": 10,
-    "passoPorDiamante": 6,
     "intervaloSegundos": 12,
     "corredores": [
       {
@@ -107,7 +137,9 @@
           "6"
         ]
       }
-    ]
+    ],
+    "turboBase": 10,
+    "turboExpoente": 0.6
   },
   "quiz": {
     "tempoPergunta": 20,

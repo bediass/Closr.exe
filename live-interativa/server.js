@@ -40,6 +40,38 @@ const estado = {
   autosim: { ativo: false, intensidade: 'movimentado' },
 };
 
+// Imagens dos presentes do TikTok (nome/id -> url). São preenchidas quando o sistema
+// conecta numa live de verdade e ficam guardadas no computador pra usar depois, até no simulador.
+const IMAGENS_PATH = path.join(__dirname, 'config', 'presentes-imagens.local.json');
+let imagensPresentes = {};
+if (existsSync(IMAGENS_PATH)) {
+  try {
+    imagensPresentes = lerJSON(IMAGENS_PATH);
+  } catch {}
+}
+let timerSalvarImagens = null;
+function registrarImagensPresentes(lista) {
+  let mudou = false;
+  for (const g of lista) {
+    if (!g?.imagem) continue;
+    for (const chave of [g.nome, g.id].filter(Boolean)) {
+      const k = String(chave).toLowerCase().trim();
+      if (imagensPresentes[k] !== g.imagem) {
+        imagensPresentes[k] = g.imagem;
+        mudou = true;
+      }
+    }
+  }
+  if (!mudou) return;
+  broadcast({ t: 'imagensPresentes', imagens: imagensPresentes });
+  clearTimeout(timerSalvarImagens);
+  timerSalvarImagens = setTimeout(() => {
+    try {
+      writeFileSync(IMAGENS_PATH, JSON.stringify(imagensPresentes, null, 2));
+    } catch {}
+  }, 2000);
+}
+
 // Último status enviado por cada tela de jogo (pra mostrar placar no painel)
 let ultimoStatus = null;
 let ultimoStatusPreview = null;
@@ -48,8 +80,8 @@ let ultimoStatusPreview = null;
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
-app.use('/fonts/russo-one', express.static(path.join(__dirname, 'node_modules/@fontsource/russo-one')));
-app.use('/fonts/chakra-petch', express.static(path.join(__dirname, 'node_modules/@fontsource/chakra-petch')));
+app.use('/fonts/barlow-condensed', express.static(path.join(__dirname, 'node_modules/@fontsource/barlow-condensed')));
+app.use('/fonts/barlow', express.static(path.join(__dirname, 'node_modules/@fontsource/barlow')));
 app.get('/', (_req, res) => res.redirect('/painel'));
 app.get('/api/config', (_req, res) => res.json({ config, perguntas }));
 
@@ -90,7 +122,11 @@ const simulador = criarSimulador({
 
 // ---------- TikTok ----------
 const tiktok = criarConexaoTikTok({
-  emitir: (ev) => emitirEvento(ev),
+  emitir: (ev) => {
+    if (ev.tipo === 'presente' && ev.presente?.imagem) registrarImagensPresentes([ev.presente]);
+    emitirEvento(ev);
+  },
+  aoReceberPresentes: (lista) => registrarImagensPresentes(lista),
   aoMudarStatus: (s) => {
     Object.assign(estado.tiktok, s);
     publicarEstado();
@@ -113,7 +149,7 @@ wss.on('connection', (ws) => {
       case 'ola': {
         ws.papel = msg.papel === 'painel' ? 'painel' : 'overlay';
         ws.preview = !!msg.preview;
-        enviar(ws, { t: 'init', estado, config, perguntas, jogos: JOGOS });
+        enviar(ws, { t: 'init', estado, config, perguntas, jogos: JOGOS, imagensPresentes });
         if (ws.papel === 'painel' && (ultimoStatus || ultimoStatusPreview)) {
           enviar(ws, { t: 'statusJogo', ...(ultimoStatus || ultimoStatusPreview) });
         }

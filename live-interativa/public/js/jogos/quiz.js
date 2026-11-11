@@ -5,7 +5,7 @@
 // Perguntas ficam em config/perguntas.json.
 
 import {
-  W, COR, FONTE_TITULO, FONTE, texto, painel, retArredondado, formatarNumero, normalizar,
+  W, COR, LAYOUT, FONTE_TITULO, FONTE, texto, bloco, etiqueta, retArredondado, formatarNumero, normalizar,
   desenharRelogio, easeOutBack, easeOut, limitar, cortarNome, lerp,
 } from '../motor.js';
 
@@ -21,7 +21,8 @@ const PADRAO = {
 };
 
 const LETRAS = ['A', 'B', 'C', 'D'];
-const CORES_ALT = ['#3B82F6', '#F43F5E', '#FBBF24', '#22C55E'];
+const CORES_ALT = ['#3D7BFF', '#FF4D4D', '#FF8A3D', '#B26BFF'];
+const Y0 = LAYOUT.jogo;
 
 const RESERVA = [
   { pergunta: 'Qual é a capital do Brasil?', alternativas: ['São Paulo', 'Brasília', 'Rio de Janeiro', 'Salvador'], correta: 1, categoria: 'Geografia' },
@@ -46,7 +47,7 @@ export default class Quiz {
     );
     if (!this.banco.length) this.banco = RESERVA;
     this.titulo = 'QUIZ AO VIVO';
-    this.yNotificacoes = 1570;
+    this.yNotificacoes = 1450;
     this.baralho = [];
     this.novaRodada();
   }
@@ -96,11 +97,13 @@ export default class Quiz {
   }
 
   instrucoes() {
-    if (this.fase === 'fim') return [{ texto: `Nova rodada em ${Math.ceil(this.tFase)}s`, cor: COR.ciano }];
-    return [
-      { texto: 'Comente A, B, C ou D', cor: COR.ouro },
-      { texto: 'Mais rápido = mais pontos  •  Presente = DICA', cor: COR.suave },
-    ];
+    if (this.fase === 'fim') return [`Nova rodada em ${Math.ceil(this.tFase)}s`];
+    return ['Comente A, B, C ou D · quem responde primeiro ganha mais'];
+  }
+
+  legendaPresente(diamantes) {
+    const pts = formatarNumero(diamantes * this.cfg.pontosPorDiamante);
+    return this.m.faixa(diamantes) === 'pequeno' ? `+${pts} pts` : `Dica +${pts}`;
   }
 
   acoes() {
@@ -157,7 +160,6 @@ export default class Quiz {
         const pts = total * this.cfg.pontosPorDiamante;
         this.somar(u, pts);
         const fx = this.m.faixa(total);
-        if (fx === 'pequeno') this.m.notificar(`${cortarNome(u.nome, 14)} ganhou +${formatarNumero(pts)} pts`, { cor: COR.destaque, usuario: u });
         if (fx !== 'pequeno' && this.fase === 'pergunta') this.dica(u);
         break;
       }
@@ -175,7 +177,7 @@ export default class Quiz {
     this.eliminadas.add(i);
     // quem tinha respondido a eliminada pode responder de novo
     for (const [id, r] of this.respostas) if (r.i === i) { this.respostas.delete(id); this.contagem[i]--; }
-    this.m.flutuar(W / 2, 900, `DICA de ${cortarNome(usuario.nome, 12)}: não é a ${LETRAS[i]}!`, COR.ouro, 44, 2);
+    this.m.flutuar(W / 2, this.yAlternativa(i) + 36, `DICA DE ${cortarNome(usuario.nome, 12).toUpperCase()}: NÃO É A ${LETRAS[i]}`, COR.amarelo, 44, 2);
     this.m.som.tocar('erro');
   }
 
@@ -191,7 +193,7 @@ export default class Quiz {
     this.primeiro = certos[0]?.usuario || null;
     this.m.som.tocar(certos.length ? 'certo' : 'erro');
     const y = this.yAlternativa(this.atual.correta);
-    this.m.explodir(W / 2, y + 37, [COR.verde, '#fff', COR.ouro], 40, 800);
+    this.m.explodir(W / 2, y + 36, [COR.verde, '#fff', COR.amarelo], 30, 700);
   }
 
   atualizar(dt) {
@@ -214,7 +216,7 @@ export default class Quiz {
   }
 
   yAlternativa(i) {
-    return 840 + i * 84;
+    return Y0 + 330 + i * 88;
   }
 
   desenhar(ctx) {
@@ -223,118 +225,117 @@ export default class Quiz {
     const ent = easeOut(Math.min(1, this.tEntrada * 3));
 
     // linha de info + relógio
-    texto(ctx, `PERGUNTA ${this.numero}/${this.cfg.perguntasPorRodada}`, 60, 498, { tam: 32, alinhar: 'left', cor: COR.suave, fonte: FONTE_TITULO, peso: 400, contorno: 0 });
-    if (q.categoria) texto(ctx, q.categoria.toUpperCase(), W - 60, 498, { tam: 30, alinhar: 'right', cor: COR.ciano, contorno: 0, maxLarg: 320 });
-    if (this.fase === 'pergunta') desenharRelogio(ctx, W / 2, 500, 54, this.tFase, this.cfg.tempoPergunta);
-    else texto(ctx, 'RESPOSTA', W / 2, 500, { tam: 40, fonte: FONTE_TITULO, peso: 400, cor: COR.verde, brilho: COR.verde });
+    texto(ctx, `PERGUNTA ${this.numero}/${this.cfg.perguntasPorRodada}`, 48, Y0 + 40, { tam: 34, alinhar: 'left', fonte: FONTE_TITULO, peso: 800, cor: COR.suave, espaco: 1 });
+    if (q.categoria) texto(ctx, q.categoria.toUpperCase(), W - 48, Y0 + 40, { tam: 34, alinhar: 'right', fonte: FONTE_TITULO, peso: 800, cor: COR.suave, espaco: 1, maxLarg: 300 });
+    if (this.fase === 'pergunta') desenharRelogio(ctx, W / 2, Y0 + 40, 42, this.tFase, this.cfg.tempoPergunta);
+    else etiqueta(ctx, 'RESPOSTA', W / 2, Y0 + 40, { tam: 34, cor: COR.verde, corTexto: COR.tinta });
 
-    // pergunta
+    // pergunta (cartão branco)
     ctx.save();
     ctx.globalAlpha = ent;
-    ctx.translate(0, (1 - ent) * 40);
-    painel(ctx, 40, 576, W - 80, 236, { r: 32, fundo: 'rgba(20, 14, 52, 0.92)', borda: COR.secundaria, brilho: COR.primaria });
-    const linhas = quebrarLinhas(ctx, q.pergunta, W - 160, 52);
-    const tam = linhas.length > 3 ? 42 : 52;
-    const ls = linhas.length > 3 ? quebrarLinhas(ctx, q.pergunta, W - 160, 42) : linhas;
-    const altura = ls.length * tam * 1.18;
-    ls.slice(0, 4).forEach((l, k) => texto(ctx, l, W / 2, 694 - altura / 2 + tam * 0.59 + k * tam * 1.18, { tam, contorno: 0 }));
+    ctx.translate(0, (1 - ent) * 30);
+    bloco(ctx, 48, Y0 + 96, W - 96, 210, { r: 14, cor: COR.texto, sombra: 10 });
+    let tam = 54;
+    let ls = quebrarLinhas(ctx, q.pergunta, W - 180, tam);
+    if (ls.length > 3) {
+      tam = 42;
+      ls = quebrarLinhas(ctx, q.pergunta, W - 180, tam);
+    }
+    const altura = ls.length * tam * 1.15;
+    ls.slice(0, 4).forEach((l, k) => texto(ctx, l, W / 2, Y0 + 201 - altura / 2 + tam * 0.575 + k * tam * 1.15, { tam, peso: 700, cor: COR.tinta }));
     ctx.restore();
 
     // alternativas
     const total = Math.max(1, this.exibido.reduce((s, v) => s + v, 0));
     q.alternativas.forEach((alt, i) => {
       const y = this.yAlternativa(i);
-      const x = 40;
-      const w = W - 80;
-      const h = 72;
+      const x = 48;
+      const w = W - 96;
+      const h = 74;
       const e = easeOutBack(limitar(this.tEntrada * 3 - 0.3 - i * 0.12, 0, 1));
       const eliminada = this.eliminadas.has(i);
       const revel = this.fase === 'revelacao';
       const certa = i === q.correta;
       ctx.save();
-      ctx.globalAlpha = eliminada ? 0.25 : revel && !certa ? 0.45 : 1;
-      ctx.translate(W / 2, y + h / 2);
-      ctx.scale(e, e);
-      ctx.translate(-W / 2, -(y + h / 2));
-      const corBorda = revel && certa ? COR.verde : CORES_ALT[i];
-      painel(ctx, x, y, w, h, { r: 22, fundo: 'rgba(12, 8, 32, 0.9)', borda: corBorda, brilho: revel && certa ? COR.verde : null });
+      ctx.globalAlpha = eliminada ? 0.3 : revel && !certa ? 0.4 : 1;
+      ctx.translate((1 - e) * -80, 0);
+      bloco(ctx, x, y, w, h, { r: 10, cor: revel && certa ? COR.verde : COR.superficie });
       // barra de votos
       const frac = this.exibido[i] / total;
-      if (frac > 0) {
+      if (frac > 0 && !(revel && certa)) {
         ctx.save();
-        retArredondado(ctx, x, y, w, h, 22);
+        retArredondado(ctx, x, y, w, h, 10);
         ctx.clip();
-        ctx.fillStyle = revel && certa ? 'rgba(34,197,94,0.35)' : 'rgba(255,255,255,0.10)';
+        ctx.fillStyle = COR.superficie2;
         ctx.fillRect(x, y, w * frac, h);
         ctx.restore();
       }
       // letra
-      retArredondado(ctx, x + 10, y + 10, 52, 52, 14);
-      ctx.fillStyle = CORES_ALT[i];
+      ctx.fillStyle = revel && certa ? COR.tinta : CORES_ALT[i];
+      retArredondado(ctx, x, y, 74, h, 10);
       ctx.fill();
-      texto(ctx, LETRAS[i], x + 36, y + 38, { tam: 36, fonte: FONTE_TITULO, peso: 400, cor: '#0B0820', contorno: 0 });
-      texto(ctx, alt, x + 84, y + 38, { tam: 38, alinhar: 'left', contorno: 0, maxLarg: w - 230, fonte: FONTE, peso: 600 });
+      texto(ctx, LETRAS[i], x + 37, y + h / 2 + 1, { tam: 48, fonte: FONTE_TITULO, peso: 800, cor: '#fff' });
+      texto(ctx, alt, x + 100, y + h / 2 + 1, { tam: 40, alinhar: 'left', peso: 700, cor: revel && certa ? COR.tinta : COR.texto, maxLarg: w - 250 });
       const qtd = Math.round(this.exibido[i]);
-      if (qtd > 0 || revel) texto(ctx, revel ? `${Math.round(frac * 100)}%` : String(qtd), x + w - 24, y + 38, { tam: 32, alinhar: 'right', cor: COR.suave, contorno: 0 });
+      if (qtd > 0 || revel) {
+        texto(ctx, revel ? `${Math.round(frac * 100)}%` : String(qtd), x + w - 24, y + h / 2 + 1, {
+          tam: 38, alinhar: 'right', fonte: FONTE_TITULO, peso: 800, cor: revel && certa ? COR.tinta : COR.suave,
+        });
+      }
       if (eliminada) {
-        ctx.strokeStyle = COR.destaque;
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.moveTo(x + 20, y + h / 2);
-        ctx.lineTo(x + w - 20, y + h / 2);
-        ctx.stroke();
+        ctx.fillStyle = COR.vermelho;
+        ctx.fillRect(x + 90, y + h / 2 - 3, w - 120, 6);
       }
       ctx.restore();
     });
 
     // rodapé da pergunta
-    const yr = this.yAlternativa(q.alternativas.length - 1) + 110;
+    const yr = this.yAlternativa(q.alternativas.length - 1) + 74 + 38;
     if (this.fase === 'revelacao') {
       if (this.primeiro) {
-        this.m.desenharAvatar(ctx, this.primeiro, W / 2 - 300, yr, 30, COR.ouro);
-        texto(ctx, `Mais rápido: ${cortarNome(this.primeiro.nome, 16)}  (${this.acertaram.length} acertaram)`, W / 2 - 256, yr + 2, { tam: 34, alinhar: 'left', cor: COR.ouro, maxLarg: 760 });
+        const str = `MAIS RÁPIDO: ${cortarNome(this.primeiro.nome, 16).toUpperCase()}  ·  ${this.acertaram.length} ACERTARAM`;
+        texto(ctx, str, W / 2, yr, { tam: 34, fonte: FONTE_TITULO, peso: 800, cor: COR.amarelo, espaco: 1, maxLarg: 980 });
       } else {
-        texto(ctx, 'Ninguém acertou essa!', W / 2, yr, { tam: 36, cor: COR.destaque });
+        texto(ctx, 'NINGUÉM ACERTOU ESSA!', W / 2, yr, { tam: 36, fonte: FONTE_TITULO, peso: 800, cor: COR.vermelho, espaco: 1 });
       }
     } else {
-      texto(ctx, `${this.respostas.size} responderam`, W / 2, yr, { tam: 32, cor: COR.suave, contorno: 0 });
+      texto(ctx, `${this.respostas.size} RESPONDERAM`, W / 2, yr, { tam: 32, fonte: FONTE_TITULO, peso: 800, cor: COR.suave, espaco: 1 });
     }
 
-    // ranking (top 3, abaixo da área principal)
-    this.m.desenharRanking(ctx, 140, 1240, W - 280, 'RANKING DA RODADA', this.ranking().map((p) => ({ usuario: p.usuario, valor: p.valor })), { max: 3 });
+    // ranking compacto
+    this.m.desenharRanking(ctx, 48, 1212, W - 96, 'RANKING DA RODADA', this.ranking().map((p) => ({ usuario: p.usuario, valor: p.valor })), { max: 3 });
   }
 
   desenharFim(ctx) {
     const t0 = this.cfg.intervaloSegundos - this.tFase;
-    const ent = easeOutBack(limitar(t0 * 2.5, 0, 1));
+    const ent = easeOutBack(limitar(t0 * 3, 0, 1));
     const top = this.ranking().slice(0, 3);
     ctx.save();
-    ctx.translate(W / 2, 800);
+    ctx.translate(W / 2, 820);
     ctx.scale(ent, ent);
-    painel(ctx, -480, -310, 960, 640, { r: 44, fundo: 'rgba(12, 8, 32, 0.95)', borda: COR.ouro, brilho: COR.ouro });
-    texto(ctx, 'FIM DA RODADA', 0, -250, { tam: 48, fonte: FONTE_TITULO, peso: 400, cor: COR.ouro });
+    bloco(ctx, -470, -320, 940, 640, { r: 16, cor: COR.texto, sombra: 14 });
+    etiqueta(ctx, 'FIM DA RODADA', 0, -320, { tam: 36 });
     if (!top.length) {
-      texto(ctx, 'Ninguém pontuou…', 0, 0, { tam: 56 });
-      texto(ctx, 'Na próxima é com você!', 0, 80, { tam: 40, cor: COR.suave });
+      texto(ctx, 'Ninguém pontuou…', 0, -20, { tam: 60, peso: 700, cor: COR.tinta });
+      texto(ctx, 'Na próxima é com você!', 0, 60, { tam: 40, peso: 600, cor: '#555' });
     } else {
       // pódio: 2º - 1º - 3º
       const posicoes = [
-        { k: 1, x: -290, alt: 140 },
-        { k: 0, x: 0, alt: 200 },
-        { k: 2, x: 290, alt: 100 },
+        { k: 1, x: -290, alt: 150 },
+        { k: 0, x: 0, alt: 210 },
+        { k: 2, x: 290, alt: 110 },
       ];
-      const cores = [COR.ouro, '#E2E8F0', '#F59E0B'];
+      const cores = [COR.amarelo, '#C9CED6', '#E0A060'];
       for (const p of posicoes) {
         const item = top[p.k];
         if (!item) continue;
-        const base = 260;
-        retArredondado(ctx, p.x - 120, base - p.alt, 240, p.alt, 16);
-        ctx.fillStyle = 'rgba(124, 58, 237, 0.45)';
-        ctx.fill();
-        texto(ctx, `${p.k + 1}º`, p.x, base - p.alt + 40, { tam: 56, fonte: FONTE_TITULO, peso: 400, cor: cores[p.k] });
-        this.m.desenharAvatar(ctx, item.usuario, p.x, base - p.alt - 120, p.k === 0 ? 70 : 56, cores[p.k]);
-        texto(ctx, cortarNome(item.usuario.nome, 12), p.x, base - p.alt - 30, { tam: 32, maxLarg: 270 });
-        texto(ctx, `${formatarNumero(item.valor)} pts`, p.x, base - p.alt + 88, { tam: 26, cor: COR.ouro, contorno: 0 });
+        const base = 270;
+        ctx.fillStyle = cores[p.k];
+        ctx.fillRect(p.x - 125, base - p.alt, 250, p.alt);
+        texto(ctx, `${p.k + 1}º`, p.x, base - p.alt + 48, { tam: 64, fonte: FONTE_TITULO, peso: 800, cor: COR.tinta });
+        texto(ctx, `${formatarNumero(item.valor)} pts`, p.x, base - p.alt + 100, { tam: 32, fonte: FONTE_TITULO, peso: 800, cor: COR.tinta });
+        this.m.desenharAvatar(ctx, item.usuario, p.x, base - p.alt - 110, p.k === 0 ? 58 : 48, COR.tinta);
+        texto(ctx, cortarNome(item.usuario.nome, 12), p.x, base - p.alt - 30, { tam: 30, peso: 700, cor: COR.tinta, maxLarg: 260 });
       }
     }
     ctx.restore();

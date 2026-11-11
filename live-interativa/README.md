@@ -105,6 +105,9 @@ Exemplos:
   pronta, use `"cores": ["#hex", "#hex"]` e `"orientacao": "h"` ou `"v"`
 - **Faixas de presente** (`presentes.faixas`): a partir de quantos diamantes um
   presente é médio, grande ou lendário
+- **Legenda de presentes no topo** (`presentes.legenda`): quais presentes aparecem
+  (até 4). As imagens vêm do TikTok depois da primeira conexão numa live real, ou
+  coloque a sua em `public/img/presentes/` e use `"imagem": "/img/presentes/rosa.png"`
 
 ---
 

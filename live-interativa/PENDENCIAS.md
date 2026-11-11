@@ -38,9 +38,14 @@ O que ficou pronto, o que não consegui testar e o que depende de você.
 
 ## Decisões suas
 
-- **Visual:** o `identidade/design-guide.md` está vazio, então usei um tema neon
-  escuro estilo game (roxo/rosa/ciano, fontes Russo One + Chakra Petch). Se quiser
-  a cara da sua marca, me passa as cores/logo.
+- **Visual:** estilo placar esportivo de TV (cores chapadas, amarelo de destaque,
+  fontes Barlow Condensed + Barlow). Se quiser a cara da sua marca, me passa as cores/logo.
+- **Imagens dos presentes na legenda:** aparecem sozinhas depois da primeira vez
+  que o sistema conectar numa live de verdade (o TikTok manda a lista com as
+  imagens e o sistema guarda no seu computador). Antes disso aparece um ícone de
+  caixinha. Os presentes da legenda (Rosa, Rosquinha, Confete, Leão) e os valores
+  ficam em `config.json` → `presentes.legenda`. Confere se os valores batem com o
+  que aparece no seu TikTok.
 - **Nome do produto:** chamei de "Live Interativa" por enquanto.
 - **Times/países/perguntas:** deixei AZUL x VERMELHO, 6 países (Brasil, Argentina,
   Portugal, México, EUA, Japão) e 55 perguntas de conhecimentos gerais. Se tiver um

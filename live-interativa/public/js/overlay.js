@@ -5,7 +5,7 @@
 //   ?guias=1         mostra as áreas que a interface do TikTok cobre
 //   ?preview=1       usado pela prévia do painel (sem som, não manda placar)
 
-import { Motor, W, H, COR, ZONA, FONTE_TITULO, texto, painel, easeOut, limitar } from './motor.js';
+import { Motor, W, H, COR, ZONA, LAYOUT, FONTE_TITULO, texto, bloco, easeOut, limitar } from './motor.js';
 import Batalha from './jogos/batalha.js';
 import Corrida from './jogos/corrida.js';
 import Quiz from './jogos/quiz.js';
@@ -29,6 +29,7 @@ let nomeJogo = null;
 let pausado = false;
 let conectado = false;
 let transicao = 0; // efeito ao trocar de jogo
+let imagensIniciais = {};
 
 // ---------- tamanho da tela ----------
 function ajustarTamanho() {
@@ -53,6 +54,7 @@ function criarJogo(nome) {
   const Classe = JOGOS[nome] || Batalha;
   if (!motor) {
     motor = new Motor(ctx, { som: somAtivo(), faixas: config?.presentes?.faixas });
+    motor.imagensPresentes = imagensIniciais;
     pedirSomSeNecessario();
   }
   motor.faixas = config?.presentes?.faixas || motor.faixas;
@@ -80,9 +82,13 @@ function pedirSomSeNecessario() {
 // ---------- eventos da live ----------
 function aoEvento(ev) {
   if (!jogo || pausado) return;
-  if (ev.tipo === 'presente') motor.reagirPresente(ev);
-  else if (ev.tipo === 'seguir') motor.notificar(`${ev.usuario.nome} começou a seguir!`, { cor: COR.verde, usuario: ev.usuario });
-  else if (ev.tipo === 'compartilhar') motor.notificar(`${ev.usuario.nome} compartilhou a live!`, { cor: COR.ciano, usuario: ev.usuario });
+  if (ev.tipo === 'presente') {
+    let efeito = '';
+    try {
+      efeito = jogo.legendaPresente?.(ev.presente.diamantes * ev.presente.quantidade) || '';
+    } catch {}
+    motor.reagirPresente(ev, efeito);
+  } else if (ev.tipo === 'seguir') motor.notificar(`${ev.usuario.nome} seguiu`, { cor: COR.verde, usuario: ev.usuario });
   try {
     jogo.aoEvento(ev);
   } catch (e) {
@@ -120,6 +126,8 @@ function conectar() {
     }
     switch (msg.t) {
       case 'init':
+        imagensIniciais = msg.imagensPresentes || {};
+        if (motor) motor.imagensPresentes = imagensIniciais;
         config = msg.config;
         perguntas = msg.perguntas || [];
         estado = msg.estado;
@@ -141,6 +149,10 @@ function conectar() {
         break;
       case 'evento':
         aoEvento(msg.evento);
+        break;
+      case 'imagensPresentes':
+        imagensIniciais = msg.imagens || {};
+        if (motor) motor.imagensPresentes = imagensIniciais;
         break;
       case 'acao':
         aoAcao(msg.acao, msg.dados);
@@ -177,57 +189,46 @@ setInterval(enviarStatus, 1000);
 function desenharFundo() {
   if (transparente()) {
     ctx.clearRect(0, 0, W, H);
+    // placa atrás do cabeçalho pra continuar legível em cima da câmera
+    bloco(ctx, 20, ZONA.topo, W - 40, LAYOUT.jogo - ZONA.topo - 12, { r: 14, cor: 'rgba(18, 20, 23, 0.82)' });
     return;
   }
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#120B2E');
-  g.addColorStop(0.5, COR.fundo);
-  g.addColorStop(1, '#07060F');
-  ctx.fillStyle = g;
+  ctx.fillStyle = COR.fundo;
   ctx.fillRect(0, 0, W, H);
-
-  // grade em perspectiva (estética retrô-futurista)
+  // faixa diagonal discreta, estilo transmissão esportiva
   ctx.save();
-  ctx.strokeStyle = 'rgba(124, 58, 237, 0.16)';
-  ctx.lineWidth = 2;
-  const desloc = (motor.t * 40) % 80;
-  for (let y = 1000 + desloc; y < H; y += 80) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(W, y);
-    ctx.stroke();
-  }
-  for (let i = -8; i <= 8; i++) {
-    ctx.beginPath();
-    ctx.moveTo(W / 2 + i * 40, 1000);
-    ctx.lineTo(W / 2 + i * 260, H);
-    ctx.stroke();
-  }
-  // brilho suave no topo
-  const r = ctx.createRadialGradient(W / 2, 300, 50, W / 2, 300, 700);
-  r.addColorStop(0, 'rgba(124, 58, 237, 0.22)');
-  r.addColorStop(1, 'rgba(124, 58, 237, 0)');
-  ctx.fillStyle = r;
-  ctx.fillRect(0, 0, W, 1100);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
+  ctx.beginPath();
+  ctx.moveTo(0, 1250);
+  ctx.lineTo(W, 980);
+  ctx.lineTo(W, 1180);
+  ctx.lineTo(0, 1450);
+  ctx.closePath();
+  ctx.fill();
   ctx.restore();
 }
 
+// Itens da legenda de presentes: os presentes configurados + o efeito no jogo atual
+function itensLegenda() {
+  const lista = config?.presentes?.legenda;
+  if (!Array.isArray(lista) || !jogo?.legendaPresente) return [];
+  return lista.slice(0, 4).map((p) => ({
+    ...p,
+    efeito: jogo.legendaPresente(Math.max(1, Number(p.diamantes) || 1)),
+  }));
+}
+
 function desenharCabecalho() {
-  const y = ZONA.topo + 10;
-  texto(ctx, jogo.titulo, W / 2, y + 42, {
-    tam: 72, fonte: FONTE_TITULO, peso: 400, cor: COR.texto, brilho: COR.primaria, contorno: 10, maxLarg: 980,
+  texto(ctx, jogo.titulo, W / 2, LAYOUT.titulo, {
+    tam: 84, fonte: FONTE_TITULO, peso: 800, italico: true, cor: COR.texto, maxLarg: 1000, espaco: 1,
   });
   const linhas = jogo.instrucoes?.() || [];
-  let yy = y + 112;
-  for (const l of linhas.slice(0, 2)) {
+  const l = linhas[0];
+  if (l) {
     const str = typeof l === 'string' ? l : l.texto;
-    const cor = typeof l === 'string' ? COR.ouro : l.cor || COR.ouro;
-    ctx.font = `700 36px "Chakra Petch"`;
-    const larg = Math.min(1000, ctx.measureText(str).width + 60);
-    painel(ctx, W / 2 - larg / 2, yy - 30, larg, 60, { r: 30, fundo: 'rgba(12, 8, 32, 0.85)', borda: cor });
-    texto(ctx, str, W / 2, yy + 1, { tam: 36, cor, contorno: 0, maxLarg: 960 });
-    yy += 72;
+    texto(ctx, str.toUpperCase(), W / 2, LAYOUT.instrucao, { tam: 38, fonte: FONTE_TITULO, peso: 800, cor: COR.amarelo, maxLarg: 1000, espaco: 1 });
   }
+  motor.desenharLegenda(ctx, itensLegenda());
 }
 
 function desenharGuias() {
@@ -247,17 +248,17 @@ function desenharGuias() {
 
 function desenharAvisos() {
   if (!conectado) {
-    painel(ctx, W / 2 - 300, H - 140, 600, 70, { r: 35, fundo: 'rgba(244, 63, 94, 0.9)', borda: null });
-    texto(ctx, 'Sem conexão com o servidor…', W / 2, H - 104, { tam: 30, contorno: 0 });
+    bloco(ctx, W / 2 - 300, H - 140, 600, 70, { r: 10, cor: COR.vermelho });
+    texto(ctx, 'Sem conexão com o servidor…', W / 2, H - 104, { tam: 30 });
   }
   if (pausado) {
-    ctx.fillStyle = 'rgba(8, 6, 24, 0.6)';
+    ctx.fillStyle = 'rgba(10, 11, 13, 0.75)';
     ctx.fillRect(0, 0, W, H);
-    texto(ctx, 'PAUSADO', W / 2, 760, { tam: 120, fonte: FONTE_TITULO, peso: 400, cor: COR.ouro, brilho: COR.ouro });
+    texto(ctx, 'PAUSADO', W / 2, 760, { tam: 150, fonte: FONTE_TITULO, peso: 800, italico: true, cor: COR.amarelo });
     texto(ctx, 'Já voltamos!', W / 2, 870, { tam: 48 });
   }
   const marca = config?.visual?.marcaDagua;
-  if (marca) texto(ctx, marca, W / 2, ZONA.base + 140, { tam: 30, cor: 'rgba(248,250,252,0.6)', contorno: 4 });
+  if (marca) texto(ctx, marca, W / 2, ZONA.base + 140, { tam: 30, cor: 'rgba(255,255,255,0.6)', contorno: 4 });
 }
 
 let ultimo = performance.now();
@@ -276,7 +277,7 @@ function quadro(agora) {
     desenharCabecalho();
     motor.desenharParticulas(ctx);
     motor.desenharFlutuantes(ctx);
-    motor.desenharNotificacoes(ctx, W / 2, jogo.yNotificacoes ?? 1240);
+    motor.desenharNotificacoes(ctx, W / 2, jogo.yNotificacoes ?? 1250);
     motor.desenharAlerta(ctx);
     motor.desenharFlash(ctx);
     ctx.restore();
@@ -284,7 +285,7 @@ function quadro(agora) {
     desenharAvisos();
     if (GUIAS) desenharGuias();
     if (transicao > 0) {
-      ctx.fillStyle = `rgba(15, 15, 35, ${easeOut(transicao)})`;
+      ctx.fillStyle = `rgba(18, 20, 23, ${easeOut(transicao)})`;
       ctx.fillRect(0, 0, W, H);
     }
   } else {
@@ -297,10 +298,10 @@ function quadro(agora) {
 
 // Espera as fontes antes de começar (canvas não troca a fonte sozinho depois)
 Promise.all([
-  document.fonts.load('400 72px "Russo One"'),
-  document.fonts.load('700 36px "Chakra Petch"'),
-  document.fonts.load('600 36px "Chakra Petch"'),
-  document.fonts.load('400 36px "Chakra Petch"'),
+  document.fonts.load('800 72px "Barlow Condensed"'),
+  document.fonts.load('italic 800 72px "Barlow Condensed"'),
+  document.fonts.load('700 36px "Barlow"'),
+  document.fonts.load('600 36px "Barlow"'),
 ])
   .catch(() => {})
   .finally(() => {

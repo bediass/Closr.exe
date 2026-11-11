@@ -42,7 +42,7 @@ export function normalizarUsuario(u) {
   return { id: String(id), nome: String(nome).slice(0, 24), avatar };
 }
 
-export function criarConexaoTikTok({ emitir, aoMudarStatus }) {
+export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes = () => {} }) {
   let conexao = null;
   let usuarioAlvo = '';
   let chaveAlvo = '';
@@ -153,6 +153,18 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus }) {
       const st = await c.connect();
       if (conexao !== c) return;
       tentativas = 0;
+      // Lista de presentes da sala (com imagens) pra mostrar na legenda da tela
+      try {
+        const lista = c.availableGifts || st?.availableGifts || [];
+        aoReceberPresentes(
+          (Array.isArray(lista) ? lista : []).map((g) => ({
+            id: g.id,
+            nome: g.name,
+            diamantes: g.diamond_count ?? g.diamondCount,
+            imagem: primeiraUrl(g.image) || primeiraUrl(g.icon),
+          })),
+        );
+      } catch {}
       status({
         status: 'conectado',
         mensagem: `Conectado na live de @${usuarioAlvo} (sala ${st?.roomId ?? '?'})`,
