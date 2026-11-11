@@ -1,6 +1,6 @@
 {
   "name": "live-interativa",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Sistema de live interativa pro TikTok: 4 jogos controlados por comentários, presentes e curtidas.",
   "main": "server.js",
   "scripts": {

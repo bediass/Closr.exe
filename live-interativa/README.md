@@ -19,7 +19,9 @@ no automático.
 
 ## 1. Ligar o sistema
 
-Precisa do **Node.js** instalado (versão LTS em https://nodejs.org). É só uma vez.
+Não precisa instalar nada antes. Se o computador não tiver **Node.js**, o atalho de
+iniciar baixa uma cópia só pra este sistema (pasta `runtime/`, uns 30 MB, do site
+oficial nodejs.org, com conferência de assinatura). Isso acontece só na primeira vez.
 
 - **Windows:** dois cliques em `iniciar-windows.bat`
 - **Mac:** dois cliques em `iniciar-mac.command` (se o Mac bloquear: botão direito → Abrir)
