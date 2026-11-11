@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Interativa — Tela do jogo</title>
+  <link rel="stylesheet" href="/fonts/russo-one/index.css">
+  <link rel="stylesheet" href="/fonts/chakra-petch/400.css">
+  <link rel="stylesheet" href="/fonts/chakra-petch/600.css">
+  <link rel="stylesheet" href="/fonts/chakra-petch/700.css">
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #0F0F23; }
+    body.transparente, html.transparente { background: transparent; }
+    #tela { position: absolute; inset: 0; margin: auto; display: block; }
+    #ativar-som {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+      font: 600 16px "Chakra Petch", sans-serif; color: #F8FAFC; background: #7C3AED;
+      border: 0; border-radius: 999px; padding: 12px 20px; cursor: pointer; min-height: 44px;
+    }
+    #ativar-som:focus-visible { outline: 3px solid #FBBF24; outline-offset: 3px; }
+    #ativar-som[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="tela" width="1080" height="1920" role="img" aria-label="Tela do jogo da live interativa"></canvas>
+  <button id="ativar-som" type="button" hidden>Clique pra ativar o som</button>
+  <script type="module" src="/js/overlay.js"></script>
+</body>
+</html>

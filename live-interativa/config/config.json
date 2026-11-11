@@ -1,0 +1,158 @@
+{
+  "porta": 3000,
+  "jogoInicial": "batalha",
+  "tiktok": {
+    "usuario": "",
+    "eulerApiKey": ""
+  },
+  "visual": {
+    "fundoTransparente": false,
+    "som": true,
+    "marcaDagua": ""
+  },
+  "presentes": {
+    "faixas": {
+      "medio": 10,
+      "grande": 100,
+      "lendario": 1000
+    }
+  },
+  "batalha": {
+    "duracaoSegundos": 180,
+    "intervaloSegundos": 12,
+    "pontosPorComentario": 1,
+    "curtidasPorPonto": 5,
+    "pontosPorDiamante": 10,
+    "pontosPorSeguir": 20,
+    "pontosPorCompartilhar": 10,
+    "times": [
+      {
+        "nome": "AZUL",
+        "cor": "#3B82F6",
+        "palavras": [
+          "azul",
+          "1"
+        ]
+      },
+      {
+        "nome": "VERMELHO",
+        "cor": "#F43F5E",
+        "palavras": [
+          "vermelho",
+          "2"
+        ]
+      }
+    ]
+  },
+  "corrida": {
+    "tamanhoPista": 250,
+    "passoComentario": 4,
+    "curtidasPorPasso": 10,
+    "passoPorDiamante": 6,
+    "intervaloSegundos": 12,
+    "corredores": [
+      {
+        "nome": "BRASIL",
+        "bandeira": "brasil",
+        "palavras": [
+          "brasil",
+          "br",
+          "1"
+        ]
+      },
+      {
+        "nome": "ARGENTINA",
+        "bandeira": "argentina",
+        "palavras": [
+          "argentina",
+          "arg",
+          "2"
+        ]
+      },
+      {
+        "nome": "PORTUGAL",
+        "bandeira": "portugal",
+        "palavras": [
+          "portugal",
+          "pt",
+          "3"
+        ]
+      },
+      {
+        "nome": "MÉXICO",
+        "bandeira": "mexico",
+        "palavras": [
+          "mexico",
+          "méxico",
+          "mx",
+          "4"
+        ]
+      },
+      {
+        "nome": "EUA",
+        "bandeira": "eua",
+        "palavras": [
+          "eua",
+          "usa",
+          "5"
+        ]
+      },
+      {
+        "nome": "JAPÃO",
+        "bandeira": "japao",
+        "palavras": [
+          "japao",
+          "japão",
+          "jp",
+          "6"
+        ]
+      }
+    ]
+  },
+  "quiz": {
+    "tempoPergunta": 20,
+    "tempoRevelacao": 7,
+    "pontosAcerto": 100,
+    "bonusVelocidade": 100,
+    "pontosPorDiamante": 10,
+    "pontosPorSeguir": 50,
+    "perguntasPorRodada": 10,
+    "intervaloSegundos": 12
+  },
+  "defesa": {
+    "vidaNucleo": 100,
+    "segundosPorOnda": 30,
+    "curtidasParaOndaDeChoque": 200,
+    "segundosDrone": 30,
+    "intervaloSegundos": 12
+  },
+  "simulador": {
+    "presentes": [
+      {
+        "nome": "Rosa",
+        "diamantes": 1,
+        "peso": 60
+      },
+      {
+        "nome": "Coração",
+        "diamantes": 5,
+        "peso": 20
+      },
+      {
+        "nome": "Rosquinha",
+        "diamantes": 30,
+        "peso": 12
+      },
+      {
+        "nome": "Confete",
+        "diamantes": 100,
+        "peso": 6
+      },
+      {
+        "nome": "Leão",
+        "diamantes": 29999,
+        "peso": 0.4
+      }
+    ]
+  }
+}

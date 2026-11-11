@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0B0A1A">
+  <title>Live Interativa — Painel</title>
+  <link rel="stylesheet" href="/fonts/russo-one/index.css">
+  <link rel="stylesheet" href="/fonts/chakra-petch/400.css">
+  <link rel="stylesheet" href="/fonts/chakra-petch/600.css">
+  <link rel="stylesheet" href="/fonts/chakra-petch/700.css">
+  <link rel="stylesheet" href="/css/painel.css">
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular pro conteúdo</a>
+
+  <header class="topo">
+    <h1 class="marca">Live <span>Interativa</span></h1>
+    <div class="pilulas" aria-label="Status do sistema">
+      <span class="pilula" id="st-servidor" data-tom="ruim">Servidor: conectando…</span>
+      <span class="pilula" id="st-tiktok" data-tom="neutro">TikTok: desconectado</span>
+      <span class="pilula" id="st-sim" data-tom="neutro">Simulação: desligada</span>
+    </div>
+  </header>
+
+  <main id="conteudo" class="grade">
+    <!-- COLUNA 1: jogo + placar -->
+    <div class="coluna">
+      <section class="card" aria-labelledby="t-jogo">
+        <h2 id="t-jogo">Jogo na tela</h2>
+        <div class="jogos" role="radiogroup" aria-label="Escolha o jogo" id="lista-jogos"></div>
+        <h3 class="sub">Comandos do jogo</h3>
+        <div class="botoes" id="acoes-jogo"></div>
+        <div class="botoes">
+          <button type="button" class="btn" id="btn-pausar">Pausar</button>
+          <button type="button" class="btn" id="btn-recarregar">Reiniciar jogo do zero</button>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="t-placar">
+        <h2 id="t-placar">Placar ao vivo</h2>
+        <p class="ajuda" id="placar-vazio">Abra a tela do jogo (prévia ao lado ou OBS) pra ver o placar aqui.</p>
+        <div id="placar-info" class="placar-info"></div>
+        <ol id="placar-lista" class="placar-lista"></ol>
+        <h3 class="sub">Top jogadores</h3>
+        <ol id="ranking-lista" class="ranking-lista"></ol>
+      </section>
+    </div>
+
+    <!-- COLUNA 2: simulador + conexão -->
+    <div class="coluna">
+      <section class="card" aria-labelledby="t-sim">
+        <h2 id="t-sim">Simulador (testar sem estar ao vivo)</h2>
+
+        <div class="linha-sim">
+          <label class="chave">
+            <input type="checkbox" id="auto-sim">
+            <span class="trilho" aria-hidden="true"></span>
+            <span>Plateia automática</span>
+          </label>
+          <div class="segmentado" role="radiogroup" aria-label="Intensidade da plateia">
+            <label><input type="radio" name="intensidade" value="calmo"><span>Calma</span></label>
+            <label><input type="radio" name="intensidade" value="movimentado" checked><span>Movimentada</span></label>
+            <label><input type="radio" name="intensidade" value="caotico"><span>Caótica</span></label>
+          </div>
+        </div>
+        <p class="ajuda">Liga uma plateia falsa que comenta, curte e manda presentes sozinha. Ótimo pra ver o jogo rodando.</p>
+
+        <h3 class="sub">Mandar evento na mão</h3>
+        <div class="campo">
+          <label for="sim-nome">Nome do espectador <small>(opcional — vazio = nome aleatório)</small></label>
+          <input id="sim-nome" name="nome" type="text" spellcheck="false" autocomplete="off" maxlength="24" placeholder="ex: maria_silva">
+        </div>
+        <form class="campo-linha" id="form-comentario">
+          <div class="campo cresce">
+            <label for="sim-texto">Comentário</label>
+            <input id="sim-texto" name="comentario" type="text" autocomplete="off" maxlength="150" placeholder="ex: azul">
+          </div>
+          <button type="submit" class="btn primario">Comentar</button>
+        </form>
+        <div class="chips" id="chips-palavras" aria-label="Comentários rápidos"></div>
+
+        <h3 class="sub">Presentes</h3>
+        <div class="campo-linha">
+          <div class="campo pequeno">
+            <label for="sim-qtd">Quantidade</label>
+            <input id="sim-qtd" name="quantidade" type="number" min="1" max="999" value="1" inputmode="numeric">
+          </div>
+        </div>
+        <div class="botoes presentes" id="botoes-presentes"></div>
+
+        <h3 class="sub">Outros</h3>
+        <div class="botoes">
+          <button type="button" class="btn" data-sim="curtida">+15 curtidas</button>
+          <button type="button" class="btn" data-sim="seguir">Seguiu</button>
+          <button type="button" class="btn" data-sim="compartilhar">Compartilhou</button>
+          <button type="button" class="btn" data-sim="rajada">Rajada (20 eventos)</button>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="t-tiktok">
+        <h2 id="t-tiktok">Conectar na live do TikTok</h2>
+        <form id="form-tiktok">
+          <div class="campo">
+            <label for="tk-usuario">Seu @ no TikTok</label>
+            <input id="tk-usuario" name="usuario" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="ex: seuperfil" required>
+          </div>
+          <div class="campo">
+            <label for="tk-chave">Chave Euler Stream <small>(opcional, ajuda a não cair)</small></label>
+            <div class="senha">
+              <input id="tk-chave" name="chave" type="password" spellcheck="false" autocomplete="off" placeholder="cole aqui se tiver">
+              <button type="button" class="btn mini" id="tk-mostrar" aria-pressed="false">Mostrar</button>
+            </div>
+          </div>
+          <div class="botoes">
+            <button type="submit" class="btn primario" id="tk-conectar">Conectar</button>
+            <button type="button" class="btn perigo" id="tk-desconectar">Desconectar</button>
+          </div>
+        </form>
+        <p class="ajuda" id="tk-mensagem" role="status">Você precisa estar AO VIVO antes de conectar.</p>
+      </section>
+    </div>
+
+    <!-- COLUNA 3: prévia + log -->
+    <div class="coluna">
+      <section class="card" aria-labelledby="t-previa">
+        <h2 id="t-previa">Prévia da tela</h2>
+        <div class="previa-moldura">
+          <iframe id="previa" title="Prévia da tela do jogo" src="/overlay?preview=1" loading="lazy"></iframe>
+        </div>
+        <div class="campo">
+          <label for="url-overlay">Link pro OBS / TikTok LIVE Studio (fonte de navegador 1080×1920)</label>
+          <div class="senha">
+            <input id="url-overlay" name="url" type="text" readonly spellcheck="false">
+            <button type="button" class="btn mini" id="copiar-url">Copiar</button>
+          </div>
+        </div>
+        <div class="botoes">
+          <a class="btn" id="abrir-overlay" href="/overlay" target="_blank" rel="noopener">Abrir tela em nova aba</a>
+          <a class="btn" href="/overlay?guias=1" target="_blank" rel="noopener">Ver áreas cobertas pelo TikTok</a>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="t-log">
+        <h2 id="t-log">Eventos chegando</h2>
+        <ul id="log" class="log" role="log" aria-label="Últimos eventos"><li class="vazio">Nenhum evento ainda. Ligue a plateia automática ou mande um comentário no simulador.</li></ul>
+      </section>
+
+      <section class="card" aria-labelledby="t-config">
+        <details>
+          <summary><h2 id="t-config">Configurações avançadas</h2></summary>
+          <p class="ajuda">Edite pontos, tempos, times, países e perguntas. Ao salvar, os jogos reiniciam com as novas regras.</p>
+          <div class="campo">
+            <label for="cfg-json">config.json</label>
+            <textarea id="cfg-json" rows="14" spellcheck="false"></textarea>
+          </div>
+          <div class="campo">
+            <label for="perg-json">perguntas.json (quiz)</label>
+            <textarea id="perg-json" rows="10" spellcheck="false"></textarea>
+          </div>
+          <button type="button" class="btn primario" id="salvar-config">Salvar configurações</button>
+        </details>
+      </section>
+    </div>
+  </main>
+
+  <div class="avisos" id="avisos" aria-live="polite"></div>
+
+  <script type="module" src="/js/painel.js"></script>
+</body>
+</html>

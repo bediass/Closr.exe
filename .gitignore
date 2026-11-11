@@ -24,3 +24,9 @@ node_modules/
 # Drop zone do usuário (só o README vai versionado)
 dados/*
 !dados/README.md
+
+# Live interativa: dados da conta do TikTok (chave de API) ficam só no computador
+live-interativa/config/tiktok.local.json
+
+# Cache do Python
+__pycache__/

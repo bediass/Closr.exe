@@ -1,0 +1,607 @@
+[
+  {
+    "pergunta": "Qual é a capital do Brasil?",
+    "alternativas": [
+      "São Paulo",
+      "Brasília",
+      "Rio de Janeiro",
+      "Salvador"
+    ],
+    "correta": 1,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quantos estados tem o Brasil (sem contar o DF)?",
+    "alternativas": [
+      "24",
+      "25",
+      "26",
+      "27"
+    ],
+    "correta": 2,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Qual é o maior planeta do Sistema Solar?",
+    "alternativas": [
+      "Saturno",
+      "Terra",
+      "Netuno",
+      "Júpiter"
+    ],
+    "correta": 3,
+    "categoria": "Ciência"
+  },
+  {
+    "pergunta": "Quantas Copas do Mundo a Seleção Brasileira já ganhou?",
+    "alternativas": [
+      "4",
+      "5",
+      "6",
+      "3"
+    ],
+    "correta": 1,
+    "categoria": "Esporte"
+  },
+  {
+    "pergunta": "Qual é o maior oceano do mundo?",
+    "alternativas": [
+      "Atlântico",
+      "Índico",
+      "Pacífico",
+      "Ártico"
+    ],
+    "correta": 2,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quantos lados tem um hexágono?",
+    "alternativas": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correta": 1,
+    "categoria": "Matemática"
+  },
+  {
+    "pergunta": "Qual animal é conhecido como o 'rei da selva'?",
+    "alternativas": [
+      "Tigre",
+      "Elefante",
+      "Leão",
+      "Gorila"
+    ],
+    "correta": 2,
+    "categoria": "Natureza"
+  },
+  {
+    "pergunta": "Em que ano o Brasil foi descoberto pelos portugueses?",
+    "alternativas": [
+      "1500",
+      "1492",
+      "1822",
+      "1600"
+    ],
+    "correta": 0,
+    "categoria": "História"
+  },
+  {
+    "pergunta": "Quem pintou a Mona Lisa?",
+    "alternativas": [
+      "Van Gogh",
+      "Picasso",
+      "Michelangelo",
+      "Leonardo da Vinci"
+    ],
+    "correta": 3,
+    "categoria": "Arte"
+  },
+  {
+    "pergunta": "Qual é o símbolo químico da água?",
+    "alternativas": [
+      "O2",
+      "H2O",
+      "CO2",
+      "HO"
+    ],
+    "correta": 1,
+    "categoria": "Ciência"
+  },
+  {
+    "pergunta": "Quanto é 7 x 8?",
+    "alternativas": [
+      "54",
+      "56",
+      "64",
+      "48"
+    ],
+    "correta": 1,
+    "categoria": "Matemática"
+  },
+  {
+    "pergunta": "Qual é o maior país do mundo em área?",
+    "alternativas": [
+      "China",
+      "Canadá",
+      "Estados Unidos",
+      "Rússia"
+    ],
+    "correta": 3,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Em que ano foi proclamada a Independência do Brasil?",
+    "alternativas": [
+      "1808",
+      "1822",
+      "1889",
+      "1500"
+    ],
+    "correta": 1,
+    "categoria": "História"
+  },
+  {
+    "pergunta": "Qual é o planeta mais próximo do Sol?",
+    "alternativas": [
+      "Vênus",
+      "Marte",
+      "Mercúrio",
+      "Terra"
+    ],
+    "correta": 2,
+    "categoria": "Ciência"
+  },
+  {
+    "pergunta": "Quantos minutos tem uma hora?",
+    "alternativas": [
+      "100",
+      "60",
+      "30",
+      "90"
+    ],
+    "correta": 1,
+    "categoria": "Geral"
+  },
+  {
+    "pergunta": "Qual destes é um mamífero?",
+    "alternativas": [
+      "Tubarão",
+      "Golfinho",
+      "Polvo",
+      "Sardinha"
+    ],
+    "correta": 1,
+    "categoria": "Natureza"
+  },
+  {
+    "pergunta": "Qual é a língua oficial do México?",
+    "alternativas": [
+      "Inglês",
+      "Português",
+      "Espanhol",
+      "Francês"
+    ],
+    "correta": 2,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Qual é o maior rio do Brasil em volume de água?",
+    "alternativas": [
+      "São Francisco",
+      "Amazonas",
+      "Paraná",
+      "Tietê"
+    ],
+    "correta": 1,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quantos jogadores de cada time ficam em campo no futebol?",
+    "alternativas": [
+      "10",
+      "11",
+      "12",
+      "9"
+    ],
+    "correta": 1,
+    "categoria": "Esporte"
+  },
+  {
+    "pergunta": "Qual é a cor resultante da mistura de azul com amarelo?",
+    "alternativas": [
+      "Roxo",
+      "Laranja",
+      "Verde",
+      "Marrom"
+    ],
+    "correta": 2,
+    "categoria": "Geral"
+  },
+  {
+    "pergunta": "Qual é o osso mais longo do corpo humano?",
+    "alternativas": [
+      "Fêmur",
+      "Úmero",
+      "Tíbia",
+      "Coluna"
+    ],
+    "correta": 0,
+    "categoria": "Ciência"
+  },
+  {
+    "pergunta": "Em qual continente fica o Egito?",
+    "alternativas": [
+      "Ásia",
+      "Europa",
+      "África",
+      "Oceania"
+    ],
+    "correta": 2,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quantos dias tem um ano bissexto?",
+    "alternativas": [
+      "365",
+      "366",
+      "364",
+      "367"
+    ],
+    "correta": 1,
+    "categoria": "Geral"
+  },
+  {
+    "pergunta": "Qual gás as plantas absorvem do ar para fazer fotossíntese?",
+    "alternativas": [
+      "Oxigênio",
+      "Nitrogênio",
+      "Gás carbônico",
+      "Hélio"
+    ],
+    "correta": 2,
+    "categoria": "Ciência"
+  },
+  {
+    "pergunta": "Qual é a capital da Argentina?",
+    "alternativas": [
+      "Santiago",
+      "Montevidéu",
+      "Lima",
+      "Buenos Aires"
+    ],
+    "correta": 3,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quem é conhecido como o 'Rei do Futebol'?",
+    "alternativas": [
+      "Ronaldo",
+      "Pelé",
+      "Zico",
+      "Romário"
+    ],
+    "correta": 1,
+    "categoria": "Esporte"
+  },
+  {
+    "pergunta": "Quanto é a raiz quadrada de 81?",
+    "alternativas": [
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correta": 2,
+    "categoria": "Matemática"
+  },
+  {
+    "pergunta": "Qual é o menor país do mundo?",
+    "alternativas": [
+      "Mônaco",
+      "Vaticano",
+      "Malta",
+      "San Marino"
+    ],
+    "correta": 1,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quantas patas tem uma aranha?",
+    "alternativas": [
+      "6",
+      "8",
+      "10",
+      "4"
+    ],
+    "correta": 1,
+    "categoria": "Natureza"
+  },
+  {
+    "pergunta": "Qual instrumento tem teclas brancas e pretas?",
+    "alternativas": [
+      "Violão",
+      "Bateria",
+      "Piano",
+      "Flauta"
+    ],
+    "correta": 2,
+    "categoria": "Música"
+  },
+  {
+    "pergunta": "Qual é a moeda oficial do Japão?",
+    "alternativas": [
+      "Yuan",
+      "Won",
+      "Iene",
+      "Rúpia"
+    ],
+    "correta": 2,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Em que país fica a Torre Eiffel?",
+    "alternativas": [
+      "Itália",
+      "França",
+      "Espanha",
+      "Bélgica"
+    ],
+    "correta": 1,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quantos segundos tem um minuto?",
+    "alternativas": [
+      "100",
+      "30",
+      "60",
+      "120"
+    ],
+    "correta": 2,
+    "categoria": "Geral"
+  },
+  {
+    "pergunta": "Qual é o animal terrestre mais rápido?",
+    "alternativas": [
+      "Leão",
+      "Guepardo",
+      "Cavalo",
+      "Antílope"
+    ],
+    "correta": 1,
+    "categoria": "Natureza"
+  },
+  {
+    "pergunta": "Qual é o maior bioma brasileiro?",
+    "alternativas": [
+      "Cerrado",
+      "Mata Atlântica",
+      "Amazônia",
+      "Pantanal"
+    ],
+    "correta": 2,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quanto é 15% de 200?",
+    "alternativas": [
+      "15",
+      "20",
+      "30",
+      "45"
+    ],
+    "correta": 2,
+    "categoria": "Matemática"
+  },
+  {
+    "pergunta": "Qual planeta é conhecido como 'planeta vermelho'?",
+    "alternativas": [
+      "Júpiter",
+      "Marte",
+      "Vênus",
+      "Saturno"
+    ],
+    "correta": 1,
+    "categoria": "Ciência"
+  },
+  {
+    "pergunta": "Qual é a capital de Portugal?",
+    "alternativas": [
+      "Porto",
+      "Lisboa",
+      "Coimbra",
+      "Braga"
+    ],
+    "correta": 1,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quantas cores tem o arco-íris?",
+    "alternativas": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correta": 2,
+    "categoria": "Geral"
+  },
+  {
+    "pergunta": "Quem escreveu 'Dom Casmurro'?",
+    "alternativas": [
+      "Machado de Assis",
+      "José de Alencar",
+      "Jorge Amado",
+      "Clarice Lispector"
+    ],
+    "correta": 0,
+    "categoria": "Literatura"
+  },
+  {
+    "pergunta": "Qual é o órgão responsável por bombear o sangue no corpo?",
+    "alternativas": [
+      "Pulmão",
+      "Fígado",
+      "Coração",
+      "Rim"
+    ],
+    "correta": 2,
+    "categoria": "Ciência"
+  },
+  {
+    "pergunta": "Em que estado fica a cidade de Manaus?",
+    "alternativas": [
+      "Pará",
+      "Amazonas",
+      "Acre",
+      "Roraima"
+    ],
+    "correta": 1,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Qual é o resultado de 100 dividido por 4?",
+    "alternativas": [
+      "20",
+      "25",
+      "40",
+      "50"
+    ],
+    "correta": 1,
+    "categoria": "Matemática"
+  },
+  {
+    "pergunta": "Qual é o maior deserto quente do mundo?",
+    "alternativas": [
+      "Atacama",
+      "Gobi",
+      "Saara",
+      "Kalahari"
+    ],
+    "correta": 2,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quantos anos tem um século?",
+    "alternativas": [
+      "10",
+      "50",
+      "100",
+      "1000"
+    ],
+    "correta": 2,
+    "categoria": "Geral"
+  },
+  {
+    "pergunta": "Qual destes animais é um anfíbio?",
+    "alternativas": [
+      "Sapo",
+      "Lagarto",
+      "Cobra",
+      "Tartaruga"
+    ],
+    "correta": 0,
+    "categoria": "Natureza"
+  },
+  {
+    "pergunta": "Qual é a capital do estado do Rio Grande do Sul?",
+    "alternativas": [
+      "Florianópolis",
+      "Curitiba",
+      "Porto Alegre",
+      "Pelotas"
+    ],
+    "correta": 2,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "A que temperatura a água ferve ao nível do mar?",
+    "alternativas": [
+      "90 °C",
+      "100 °C",
+      "120 °C",
+      "80 °C"
+    ],
+    "correta": 1,
+    "categoria": "Ciência"
+  },
+  {
+    "pergunta": "Qual é o satélite natural da Terra?",
+    "alternativas": [
+      "Sol",
+      "Lua",
+      "Marte",
+      "Estrela Dalva"
+    ],
+    "correta": 1,
+    "categoria": "Ciência"
+  },
+  {
+    "pergunta": "Em que cidade fica o Cristo Redentor?",
+    "alternativas": [
+      "São Paulo",
+      "Salvador",
+      "Rio de Janeiro",
+      "Belo Horizonte"
+    ],
+    "correta": 2,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quantos zeros tem um milhão?",
+    "alternativas": [
+      "5",
+      "6",
+      "7",
+      "9"
+    ],
+    "correta": 1,
+    "categoria": "Matemática"
+  },
+  {
+    "pergunta": "Qual esporte usa raquete e peteca?",
+    "alternativas": [
+      "Tênis",
+      "Badminton",
+      "Squash",
+      "Pingue-pongue"
+    ],
+    "correta": 1,
+    "categoria": "Esporte"
+  },
+  {
+    "pergunta": "Qual é o metal cujo símbolo químico é Au?",
+    "alternativas": [
+      "Prata",
+      "Alumínio",
+      "Ouro",
+      "Cobre"
+    ],
+    "correta": 2,
+    "categoria": "Ciência"
+  },
+  {
+    "pergunta": "Qual é o continente mais populoso do mundo?",
+    "alternativas": [
+      "África",
+      "Europa",
+      "América",
+      "Ásia"
+    ],
+    "correta": 3,
+    "categoria": "Geografia"
+  },
+  {
+    "pergunta": "Quantos meses do ano têm 31 dias?",
+    "alternativas": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correta": 2,
+    "categoria": "Geral"
+  }
+]

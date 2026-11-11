@@ -1,0 +1,20 @@
+{
+  "name": "live-interativa",
+  "version": "0.1.0",
+  "description": "Sistema de live interativa pro TikTok: 4 jogos controlados por comentários, presentes e curtidas.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@fontsource/chakra-petch": "^5.3.0",
+    "@fontsource/russo-one": "^5.3.0",
+    "express": "^4.22.3",
+    "tiktok-live-connector": "^2.5.0",
+    "ws": "^8.22.2"
+  },
+  "type": "module",
+  "private": true
+}
