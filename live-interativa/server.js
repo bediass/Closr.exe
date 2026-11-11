@@ -13,6 +13,7 @@ import os from 'node:os';
 import { WebSocketServer } from 'ws';
 import { criarSimulador } from './src/simulador.js';
 import { criarConexaoTikTok } from './src/tiktok.js';
+import { criarTradutorPresentes } from './src/traducoes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CONFIG_PATH = path.join(__dirname, 'config', 'config.json');
@@ -135,9 +136,16 @@ const simulador = criarSimulador({
 });
 
 // ---------- TikTok ----------
+const traduzirPresente = criarTradutorPresentes(() => config);
 const tiktok = criarConexaoTikTok({
   emitir: (ev) => {
-    if (ev.tipo === 'presente' && ev.presente?.imagem) registrarImagensPresentes([ev.presente]);
+    if (ev.tipo === 'presente' && ev.presente) {
+      const original = ev.presente.nome;
+      const traduzido = traduzirPresente(original);
+      // guarda a imagem pelos dois nomes (inglês e português)
+      if (ev.presente.imagem) registrarImagensPresentes([{ ...ev.presente, nome: original }, { ...ev.presente, nome: traduzido }]);
+      ev = { ...ev, presente: { ...ev.presente, nome: traduzido, nomeOriginal: original } };
+    }
     emitirEvento(ev);
   },
   aoReceberPresentes: (lista) => registrarImagensPresentes(lista),

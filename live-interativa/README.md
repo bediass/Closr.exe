@@ -105,6 +105,9 @@ Exemplos:
   pronta, use `"cores": ["#hex", "#hex"]` e `"orientacao": "h"` ou `"v"`
 - **Faixas de presente** (`presentes.faixas`): a partir de quantos diamantes um
   presente é médio, grande ou lendário
+- **Nomes dos presentes em português** (`presentes.traducoes`): o TikTok manda os
+  nomes em inglês ("Rose") e o sistema traduz ("Rosa"). Os mais comuns já vêm
+  traduzidos; pra completar, adicione por exemplo `"traducoes": { "Corgi": "Cachorrinho" }`
 - **Legenda de presentes no topo** (`presentes.legenda`): quais presentes aparecem
   (até 4). As imagens vêm do TikTok depois da primeira conexão numa live real, ou
   coloque a sua em `public/img/presentes/` e use `"imagem": "/img/presentes/rosa.png"`
