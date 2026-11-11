@@ -61,7 +61,7 @@ function listarMonitores() {
   });
 }
 
-export async function abrirTelaDeCaptura(url, { preferirChrome = false } = {}) {
+export async function abrirTelaDeCaptura(url, { preferirChrome = false, deitada = false } = {}) {
   const exe = candidatos(preferirChrome).find((p) => p && existsSync(p));
   if (!exe) return { ok: false, erro: 'Não achei o Microsoft Edge nem o Google Chrome instalados neste computador.' };
 
@@ -71,7 +71,12 @@ export async function abrirTelaDeCaptura(url, { preferirChrome = false } = {}) {
 
   const args = [`--app=${url}`];
   let modo;
-  if (emPe) {
+  if (deitada) {
+    // Jogo girado em tela cheia no monitor principal (deitado). Gira 90° no LIVE Studio.
+    if (principal) args.push(`--window-position=${principal.x},${principal.y}`, `--window-size=${principal.largura},${principal.altura}`);
+    args.push('--start-fullscreen');
+    modo = 'tela-cheia-deitada';
+  } else if (emPe) {
     // Tela cheia no monitor em pé
     args.push(`--window-position=${emPe.x},${emPe.y}`, `--window-size=${emPe.largura},${emPe.altura}`, '--start-fullscreen');
     modo = 'tela-cheia-monitor-em-pe';
@@ -90,7 +95,7 @@ export async function abrirTelaDeCaptura(url, { preferirChrome = false } = {}) {
 
   // Perfil separado: garante que as opções valem mesmo com o navegador normal aberto,
   // e não mexe nas suas abas/contas.
-  const perfil = path.join(os.homedir(), '.live-interativa', 'navegador-v2');
+  const perfil = path.join(os.homedir(), '.live-interativa', deitada ? 'navegador-deitada' : 'navegador-v2');
   mkdirSync(perfil, { recursive: true });
   args.push(
     '--autoplay-policy=no-user-gesture-required',

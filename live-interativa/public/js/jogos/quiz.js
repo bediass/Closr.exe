@@ -198,7 +198,7 @@ export default class Quiz {
 
   atualizar(dt) {
     this.tEntrada += dt;
-    if (this.atual) this.exibido = this.exibido.map((v, i) => lerp(v, this.contagem[i] || 0, Math.min(1, dt * 6)));
+    if (this.atual) this.exibido = this.exibido.map((v, i) => lerp(v, this.contagem[i] || 0, Math.min(1, dt * 15)));
     const antes = Math.ceil(this.tFase);
     this.tFase -= dt;
     if (this.fase === 'pergunta') {

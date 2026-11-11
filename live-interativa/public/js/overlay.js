@@ -34,10 +34,16 @@ let transicao = 0; // efeito ao trocar de jogo
 let imagensIniciais = {};
 
 // ---------- tamanho da tela ----------
+// ?girar=1 → desenha o jogo deitado (girado 90°) pra ocupar um monitor deitado inteiro.
+// No LIVE Studio/OBS você gira a fonte 90° no sentido horário e ele fica em pé, em 1080×1920.
+const GIRAR = params.get('girar') === '1';
 function ajustarTamanho() {
-  const esc = Math.min(window.innerWidth / W, window.innerHeight / H);
+  const esc = GIRAR
+    ? Math.min(window.innerWidth / H, window.innerHeight / W)
+    : Math.min(window.innerWidth / W, window.innerHeight / H);
   canvas.style.width = `${W * esc}px`;
   canvas.style.height = `${H * esc}px`;
+  canvas.style.transform = GIRAR ? 'rotate(-90deg)' : '';
 }
 window.addEventListener('resize', ajustarTamanho);
 ajustarTamanho();

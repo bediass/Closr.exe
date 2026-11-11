@@ -179,7 +179,7 @@ export default class Batalha {
 
   atualizar(dt) {
     for (const t of this.times) {
-      t.exibido = lerp(t.exibido, t.pontos, Math.min(1, dt * 8));
+      t.exibido = lerp(t.exibido, t.pontos, Math.min(1, dt * 20));
       t.pulso = Math.max(0, t.pulso - dt * 4);
     }
     if (this.fase === 'jogando') {

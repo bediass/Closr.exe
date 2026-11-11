@@ -302,11 +302,15 @@ $('#copiar-url').addEventListener('click', async () => {
   }
 });
 
-$('#abrir-captura').addEventListener('click', async (e) => {
+async function abrirTela(e, deitada) {
   const b = e.currentTarget;
   b.disabled = true;
   try {
-    const r = await fetch('/api/abrir-tela', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then((x) => x.json());
+    const r = await fetch('/api/abrir-tela', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deitada }) }).then((x) => x.json());
+    if (r.ok && r.modo === 'tela-cheia-deitada') {
+      avisar('Abri deitada em tela cheia. Alt+Tab pro LIVE Studio → Captura de janela → "msedge.exe" → gire a fonte 90° no sentido horário.', 'ok');
+      return;
+    }
     if (r.ok) {
       const nome = /edge/i.test(r.navegador) ? 'msedge.exe' : 'chrome.exe';
       const onde = r.modo === 'tela-cheia-monitor-em-pe'
@@ -320,7 +324,9 @@ $('#abrir-captura').addEventListener('click', async (e) => {
   } finally {
     b.disabled = false;
   }
-});
+}
+$('#abrir-captura').addEventListener('click', (e) => abrirTela(e, false));
+$('#abrir-deitada').addEventListener('click', (e) => abrirTela(e, true));
 
 $('#copiar-celular').addEventListener('click', async () => {
   const url = $('#url-celular').value;
@@ -371,6 +377,7 @@ function registrar(ev) {
     el('span', { className: 'tipo' }, NOMES_TIPO[ev.tipo] || ev.tipo),
     `${ev.usuario?.nome || '?'} ${desc}`,
     ev.simulado ? el('span', { className: 'sim' }, 'simulado') : null,
+    ev.atrasoMs != null ? el('span', { className: 'sim' }, `chegou em ${(ev.atrasoMs / 1000).toFixed(1).replace('.', ',')}s`) : null,
   );
   log.querySelector('.vazio')?.remove();
   log.prepend(li);

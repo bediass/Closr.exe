@@ -68,7 +68,17 @@ export function normalizarUsuario(u) {
   return { id: String(id), nome: String(nome).slice(0, 24), avatar };
 }
 
-export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes = () => {} }) {
+// Quanto tempo a mensagem levou do TikTok até aqui (usa o horário que o TikTok carimba nela)
+function atrasoDe(d) {
+  const t = Number(d?.common?.createTime || d?.createTime || 0);
+  if (!t) return null;
+  const ms = Date.now() - (t < 1e12 ? t * 1000 : t);
+  return ms > -5000 && ms < 120000 ? Math.max(0, ms) : null;
+}
+
+export function criarConexaoTikTok({ emitir: emitirBruto, aoMudarStatus, aoReceberPresentes = () => {} }) {
+  let dadoAtual = null;
+  const emitir = (ev) => emitirBruto({ ...ev, atrasoMs: atrasoDe(dadoAtual) });
   let conexao = null;
   let usuarioAlvo = '';
   let chaveAlvo = '';
@@ -147,11 +157,13 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
     const c = conexao;
 
     c.on(WebcastEvent.CHAT, (d) => {
+      dadoAtual = d;
       // versões novas da biblioteca mandam o texto em 'content'; antigas em 'comment'
       emitir({ tipo: 'comentario', usuario: normalizarUsuario(d.user), texto: textoDoComentario(d) });
     });
 
     c.on(WebcastEvent.GIFT, (d) => {
+      dadoAtual = d;
       const giftType = d.giftDetails?.giftType ?? d.gift?.type ?? d.extendedGiftInfo?.type;
       // Presentes em sequência (tipo 1) disparam vários eventos; só conta quando a sequência termina
       if (Number(giftType) === 1 && !d.repeatEnd) return;
@@ -175,12 +187,22 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
     });
 
     c.on(WebcastEvent.LIKE, (d) => {
+      dadoAtual = d;
       emitir({ tipo: 'curtida', usuario: normalizarUsuario(d.user), curtidas: Math.max(1, Number(d.likeCount ?? d.count) || 1) });
     });
 
-    c.on(WebcastEvent.FOLLOW, (d) => emitir({ tipo: 'seguir', usuario: normalizarUsuario(d.user) }));
-    c.on(WebcastEvent.SHARE, (d) => emitir({ tipo: 'compartilhar', usuario: normalizarUsuario(d.user) }));
-    c.on(WebcastEvent.MEMBER, (d) => emitir({ tipo: 'entrou', usuario: normalizarUsuario(d.user) }));
+    c.on(WebcastEvent.FOLLOW, (d) => {
+      dadoAtual = d;
+      emitir({ tipo: 'seguir', usuario: normalizarUsuario(d.user) });
+    });
+    c.on(WebcastEvent.SHARE, (d) => {
+      dadoAtual = d;
+      emitir({ tipo: 'compartilhar', usuario: normalizarUsuario(d.user) });
+    });
+    c.on(WebcastEvent.MEMBER, (d) => {
+      dadoAtual = d;
+      emitir({ tipo: 'entrou', usuario: normalizarUsuario(d.user) });
+    });
 
     c.on(WebcastEvent.ROOM_USER, (d) => {
       aoMudarStatus({ espectadores: Number(d.viewerCount ?? d.total) || 0 });
