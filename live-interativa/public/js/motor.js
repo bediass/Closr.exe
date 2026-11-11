@@ -608,24 +608,44 @@ export class Motor {
     ctx.restore();
   }
 
-  // Ranking compacto (sem caixa em volta)
-  desenharRanking(ctx, x, y, w, titulo, lista, { max = 3, cor = COR.amarelo, sufixo = 'pts' } = {}) {
-    texto(ctx, titulo, x, y + 14, { tam: 28, alinhar: 'left', fonte: FONTE_TITULO, peso: 800, cor: COR.suave, espaco: 2 });
-    let yy = y + 38;
-    const linha = 58;
+  // Ranking grande em painel (é o que motiva a galera a aparecer)
+  desenharRanking(ctx, x, y, w, titulo, lista, { max = 5, cor = COR.amarelo, sufixo = 'pts' } = {}) {
+    const linha = 70;
+    const topo = 78;
+    const n = Math.max(1, Math.min(max, lista.length));
+    const h = topo + n * linha + 14;
+    bloco(ctx, x, y, w, h, { r: 14, cor: 'rgba(29, 32, 39, 0.94)', sombra: 8 });
+    // título com faixa de cor
+    ctx.fillStyle = cor;
+    retArredondado(ctx, x, y, w, 60, 14);
+    ctx.fill();
+    ctx.fillRect(x, y + 40, w, 20);
+    texto(ctx, titulo, x + w / 2, y + 31, { tam: 40, fonte: FONTE_TITULO, peso: 800, italico: true, cor: COR.tinta, espaco: 1 });
     if (!lista.length) {
-      texto(ctx, 'Ninguém ainda. Comenta aí!', x, yy + linha / 2, { tam: 30, alinhar: 'left', peso: 600, cor: COR.apagado });
-      return linha + 38;
+      texto(ctx, 'Ninguém ainda. Comenta aí e aparece aqui!', x + w / 2, y + topo + linha / 2, { tam: 32, peso: 600, cor: COR.suave });
+      return h;
     }
+    const medalhas = [COR.amarelo, '#D3D7DE', '#E0A060'];
     lista.slice(0, max).forEach((item, i) => {
-      bloco(ctx, x, yy, w, linha - 8, { r: 8, cor: i === 0 ? COR.superficie2 : COR.superficie });
-      texto(ctx, String(i + 1), x + 32, yy + 26, { tam: 34, fonte: FONTE_TITULO, peso: 800, cor: i === 0 ? cor : COR.suave });
-      this.desenharAvatar(ctx, item.usuario, x + 82, yy + 25, 19);
-      texto(ctx, cortarNome(item.usuario.nome, 18), x + 114, yy + 26, { tam: 30, alinhar: 'left', peso: 600, maxLarg: w - 300 });
-      texto(ctx, `${formatarNumero(item.valor)} ${item.valor === 1 && sufixo.endsWith('s') ? sufixo.slice(0, -1) : sufixo}`, x + w - 20, yy + 26, { tam: 32, alinhar: 'right', fonte: FONTE_TITULO, peso: 800, cor: i === 0 ? cor : COR.texto });
-      yy += linha;
+      const yy = y + topo + i * linha;
+      const cy = yy + linha / 2 - 4;
+      if (i === 0) bloco(ctx, x + 10, yy - 4, w - 20, linha - 4, { r: 10, cor: comAlfa(cor, 0.16) });
+      // posição
+      if (i < 3) {
+        ctx.fillStyle = medalhas[i];
+        ctx.beginPath();
+        ctx.arc(x + 46, cy, 22, 0, Math.PI * 2);
+        ctx.fill();
+        texto(ctx, String(i + 1), x + 46, cy + 1, { tam: 32, fonte: FONTE_TITULO, peso: 800, cor: COR.tinta });
+      } else {
+        texto(ctx, String(i + 1), x + 46, cy + 1, { tam: 34, fonte: FONTE_TITULO, peso: 800, cor: COR.suave });
+      }
+      this.desenharAvatar(ctx, item.usuario, x + 108, cy, 26, i === 0 ? cor : null);
+      texto(ctx, cortarNome(item.usuario.nome, 18), x + 148, cy + 1, { tam: 36, alinhar: 'left', peso: 700, maxLarg: w - 380 });
+      const suf = item.valor === 1 && sufixo.endsWith('s') ? sufixo.slice(0, -1) : sufixo;
+      texto(ctx, `${formatarNumero(item.valor)} ${suf}`, x + w - 24, cy + 1, { tam: 40, alinhar: 'right', fonte: FONTE_TITULO, peso: 800, cor: i === 0 ? cor : COR.texto });
     });
-    return yy - y;
+    return h;
   }
 
   // Legenda de presentes no topo: [imagem] Rosa / +10 pts

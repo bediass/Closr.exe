@@ -47,7 +47,7 @@ export default class Quiz {
     );
     if (!this.banco.length) this.banco = RESERVA;
     this.titulo = 'QUIZ AO VIVO';
-    this.yNotificacoes = 1450;
+    this.yNotificacoes = 1678;
     this.baralho = [];
     this.novaRodada();
   }
@@ -303,7 +303,7 @@ export default class Quiz {
     }
 
     // ranking compacto
-    this.m.desenharRanking(ctx, 48, 1212, W - 96, 'RANKING DA RODADA', this.ranking().map((p) => ({ usuario: p.usuario, valor: p.valor })), { max: 3 });
+    this.m.desenharRanking(ctx, 48, 1218, W - 96, 'RANKING DA RODADA', this.ranking().map((p) => ({ usuario: p.usuario, valor: p.valor })), { max: 5 });
   }
 
   desenharFim(ctx) {

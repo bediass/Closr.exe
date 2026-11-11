@@ -270,6 +270,20 @@ export default class Corrida {
       .join('  ·  ');
     if (vit) texto(ctx, `VITÓRIAS DA NOITE   ${vit}`, W / 2, yb + 50, { tam: 28, fonte: FONTE_TITULO, peso: 800, cor: COR.suave, espaco: 1, maxLarg: 1000 });
 
+    // maiores torcedores (somando todos os países)
+    const ry = yb + (vit ? 84 : 40);
+    const somados = new Map();
+    for (const c of this.corredores) {
+      for (const [id, f] of c.fas) {
+        const s = somados.get(id) || { usuario: f.usuario, valor: 0 };
+        s.valor += f.valor;
+        somados.set(id, s);
+      }
+    }
+    const lista = [...somados.values()].sort((a, b) => b.valor - a.valor);
+    const rh = this.m.desenharRanking(ctx, 48, ry, W - 96, 'MAIORES TORCEDORES', lista, { max: 5 });
+    this.yNotificacoes = ry + rh + 18;
+
     if (this.fase === 'fim') this.desenharFim(ctx);
   }
 

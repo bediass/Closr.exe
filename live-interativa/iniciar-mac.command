@@ -10,10 +10,8 @@ if ! command -v node >/dev/null 2>&1; then
   exit 1
 fi
 
-if [ ! -d node_modules ]; then
-  echo "Instalando dependências pela primeira vez, aguarde..."
-  npm install
-fi
+echo "Conferindo dependências (na primeira vez demora um pouco)..."
+npm install --no-audit --no-fund --loglevel=error
 
 (sleep 2 && open "http://localhost:3000/painel") &
 node server.js

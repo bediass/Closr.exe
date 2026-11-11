@@ -33,7 +33,7 @@ export default class Defesa {
     this.m = motor;
     this.cfg = { ...PADRAO, ...cfg };
     this.titulo = 'PROTEJA O NÚCLEO';
-    this.yNotificacoes = 1470;
+    this.yNotificacoes = 1696;
     this.recorde = 0;
     this.novaPartida();
   }
@@ -521,7 +521,7 @@ export default class Defesa {
     texto(ctx, `CURTIDAS → ONDA DE CHOQUE  ${Math.floor(ef * 100)}%`, W / 2, ey + 1, { tam: 28, fonte: FONTE_TITULO, peso: 800, contorno: 5, espaco: 1 });
 
     const lista = [...this.abates.values()].sort((a, b) => b.valor - a.valor).map((a) => ({ usuario: a.usuario, valor: a.valor }));
-    this.m.desenharRanking(ctx, 48, 1240, W - 96, 'MAIORES DEFENSORES', lista, { max: 3, sufixo: 'abates', cor: COR.ciano });
+    this.m.desenharRanking(ctx, 48, 1236, W - 96, 'MAIORES DEFENSORES', lista, { max: 5, sufixo: 'abates', cor: COR.ciano });
   }
 
   desenharFim(ctx) {

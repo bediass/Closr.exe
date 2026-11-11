@@ -13,10 +13,8 @@ if errorlevel 1 (
   exit /b 1
 )
 
-if not exist node_modules (
-  echo Instalando dependencias pela primeira vez, aguarde...
-  call npm install
-)
+echo Conferindo dependencias (na primeira vez demora um pouco)...
+call npm install --no-audit --no-fund --loglevel=error
 
 start "" http://localhost:3000/painel
 node server.js

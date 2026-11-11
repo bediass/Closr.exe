@@ -268,6 +268,12 @@ export default class Batalha {
     const placar = this.times.map((t, i) => `${t.nome} ${this.vitorias[i]}`).join('  ×  ');
     texto(ctx, `VITÓRIAS DA NOITE   ${placar}`, W / 2, by + bh + 46, { tam: 30, fonte: FONTE_TITULO, peso: 800, cor: COR.suave, espaco: 1, maxLarg: 1000 });
 
+    // ranking de quem mais pontuou (com a cor do time na frente do nome)
+    const ry = by + bh + 86;
+    const lista = [...this.contrib.values()].sort((a, b) => b.valor - a.valor).map((c) => ({ usuario: c.usuario, valor: c.valor }));
+    const rh = this.m.desenharRanking(ctx, 48, ry, W - 96, 'TOP JOGADORES', lista, { max: 5 });
+    this.yNotificacoes = ry + rh + 18;
+
     if (this.fase === 'fim') this.desenharFim(ctx);
   }
 

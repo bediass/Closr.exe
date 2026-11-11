@@ -80,8 +80,6 @@ let ultimoStatusPreview = null;
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
-app.use('/fonts/barlow-condensed', express.static(path.join(__dirname, 'node_modules/@fontsource/barlow-condensed')));
-app.use('/fonts/barlow', express.static(path.join(__dirname, 'node_modules/@fontsource/barlow')));
 app.get('/', (_req, res) => res.redirect('/painel'));
 app.get('/api/config', (_req, res) => res.json({ config, perguntas }));
 

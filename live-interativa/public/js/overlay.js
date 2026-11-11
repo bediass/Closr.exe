@@ -193,18 +193,38 @@ function desenharFundo() {
     bloco(ctx, 20, ZONA.topo, W - 40, LAYOUT.jogo - ZONA.topo - 12, { r: 14, cor: 'rgba(18, 20, 23, 0.82)' });
     return;
   }
-  ctx.fillStyle = COR.fundo;
+  // degradê preto
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#1C1D21');
+  g.addColorStop(0.5, '#101114');
+  g.addColorStop(1, '#060607');
+  ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
-  // faixa diagonal discreta, estilo transmissão esportiva
+
+  // grade em perspectiva andando (chão de arena)
   ctx.save();
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
-  ctx.beginPath();
-  ctx.moveTo(0, 1250);
-  ctx.lineTo(W, 980);
-  ctx.lineTo(W, 1180);
-  ctx.lineTo(0, 1450);
-  ctx.closePath();
-  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+  ctx.lineWidth = 2;
+  const horizonte = 1000;
+  const desloc = (motor.t * 40) % 80;
+  for (let y = horizonte + desloc; y < H; y += 80) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+  for (let i = -8; i <= 8; i++) {
+    ctx.beginPath();
+    ctx.moveTo(W / 2 + i * 40, horizonte);
+    ctx.lineTo(W / 2 + i * 260, H);
+    ctx.stroke();
+  }
+  // luz suave no topo
+  const r = ctx.createRadialGradient(W / 2, 300, 40, W / 2, 300, 720);
+  r.addColorStop(0, 'rgba(255, 255, 255, 0.07)');
+  r.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = r;
+  ctx.fillRect(0, 0, W, 1100);
   ctx.restore();
 }
 
