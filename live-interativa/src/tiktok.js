@@ -49,6 +49,7 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
   let querConectado = false;
   let tentativas = 0;
   let timerReconexao = null;
+  let ultimoErro = '';
 
   function status(s) {
     aoMudarStatus(s);
@@ -66,17 +67,39 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
     conexao = null;
   }
 
-  function agendarReconexao() {
+  function agendarReconexao(motivo) {
     if (!querConectado) return;
     tentativas++;
-    if (tentativas > 20) {
-      status({ status: 'erro', mensagem: 'Desisti de reconectar depois de 20 tentativas. Clique em Conectar de novo.' });
+    const dicaChave = !chaveAlvo && tentativas >= 2
+      ? ' DICA: crie uma chave grátis em eulerstream.com e cole no painel, isso costuma resolver.'
+      : '';
+    if (tentativas > 8) {
+      status({ status: 'erro', mensagem: `Desisti depois de 8 tentativas. Último erro: ${motivo}.${dicaChave}` });
       querConectado = false;
       return;
     }
     const espera = Math.min(30, 5 * tentativas);
-    status({ status: 'conectando', mensagem: `Conexão caiu. Tentando de novo em ${espera}s (tentativa ${tentativas})...` });
+    status({ status: 'conectando', mensagem: `Não deu certo: ${motivo}. Tentando de novo em ${espera}s (tentativa ${tentativas}).${dicaChave}` });
     timerReconexao = setTimeout(abrir, espera * 1000);
+  }
+
+  // Quando falha, testa passo a passo pra dizer ONDE está o problema
+  async function diagnosticar(c) {
+    const comLimite = (p) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('demorou demais')), 15000))]);
+    const partes = [];
+    try {
+      const aoVivo = await comLimite(c.fetchIsLive());
+      partes.push(aoVivo ? 'TikTok confirma que você está ao vivo ✓' : 'TikTok diz que você NÃO está ao vivo ✗');
+    } catch (e) {
+      partes.push(`não consegui perguntar ao TikTok se você está ao vivo (${e?.message || e})`);
+    }
+    try {
+      const sala = await comLimite(c.fetchRoomId());
+      partes.push(sala ? `sala da live encontrada (${sala}) ✓` : 'sala da live não encontrada ✗');
+    } catch (e) {
+      partes.push(`não achei a sala da live (${e?.message || e})`);
+    }
+    return partes.join(' · ');
   }
 
   async function abrir() {
@@ -138,17 +161,21 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
       status({ status: 'desconectado', mensagem: 'A live terminou.' });
     });
 
-    c.on(ControlEvent.DISCONNECTED, () => {
+    c.on(ControlEvent.DISCONNECTED, (info) => {
       if (conexao !== c) return;
-      if (querConectado) agendarReconexao();
+      const cod = info?.code ? ` (código ${info.code}${info.reason ? ': ' + info.reason : ''})` : '';
+      if (querConectado) agendarReconexao(`a conexão caiu${cod}${ultimoErro ? ' — ' + ultimoErro : ''}`);
       else status({ status: 'desconectado', mensagem: 'Desconectado.' });
     });
 
     c.on(ControlEvent.ERROR, (e) => {
-      const info = e?.info || e?.exception?.message || 'erro desconhecido';
+      const info = [e?.info, e?.exception?.message].filter(Boolean).join(': ') || 'erro desconhecido';
+      ultimoErro = info;
       console.error('[tiktok] erro:', info);
+      if (e?.exception?.stack) console.error(e.exception.stack);
     });
 
+    ultimoErro = '';
     try {
       const st = await c.connect();
       if (conexao !== c) return;
@@ -188,11 +215,24 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
         });
         return;
       }
+      console.error('[tiktok] falha ao conectar:', nomeErro, msg);
+      if (e?.stack) console.error(e.stack);
       if (/rate.?limit|429/i.test(msg)) {
-        msg = 'Limite do servidor de assinatura (Euler Stream) atingido. Coloque uma chave de API grátis do eulerstream.com no painel.';
+        msg = 'limite grátis do serviço de assinatura (Euler Stream) estourou — coloque uma chave grátis do eulerstream.com no painel';
+      } else if (/sign|euler|401|403|api.?key|unauthori/i.test(msg)) {
+        msg = `o serviço de assinatura (Euler Stream) recusou (${msg}) — coloque uma chave grátis do eulerstream.com no painel`;
       }
-      status({ status: 'erro', mensagem: 'Falha ao conectar: ' + msg });
-      agendarReconexao();
+      // Na primeira falha, roda um diagnóstico pra mostrar onde travou
+      if (tentativas === 0) {
+        status({ status: 'conectando', mensagem: `Falhou (${msg}). Fazendo um diagnóstico rápido...` });
+        const diag = await diagnosticar(c).catch(() => '');
+        if (conexao !== c) return;
+        if (diag) {
+          msg = `${msg}. Diagnóstico: ${diag}`;
+          console.log('[tiktok] diagnóstico:', diag);
+        }
+      }
+      agendarReconexao(msg);
     }
   }
 

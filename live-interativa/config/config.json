@@ -1,10 +1,6 @@
 {
   "porta": 3000,
   "jogoInicial": "batalha",
-  "tiktok": {
-    "usuario": "",
-    "eulerApiKey": ""
-  },
   "visual": {
     "fundoTransparente": false,
     "som": true,
@@ -186,5 +182,9 @@
         "peso": 0.4
       }
     ]
+  },
+  "tiktok": {
+    "usuario": "",
+    "eulerApiKey": ""
   }
 }
