@@ -82,13 +82,17 @@ Opções da URL (dá pra combinar com `&`):
 > Ela usa um serviço externo de "assinatura" (Euler Stream). Sem chave funciona,
 > mas com limite de uso. Se cair muito, crie uma conta grátis em eulerstream.com e
 > cole a chave no painel. Sua chave fica só no seu computador
-> (`config/tiktok.local.json`, que não vai pro GitHub).
+> (na pasta `.live-interativa` dentro da sua pasta de usuário, que não vai pro GitHub).
 
 ---
 
 ## 4. Personalizar
 
-Tudo fica em **Configurações avançadas** no painel (ou nos arquivos da pasta `config/`):
+Tudo fica em **Configurações avançadas** no painel. O que você salvar lá vai pra
+pasta `.live-interativa` dentro da sua pasta de usuário (no Windows:
+`C:\Users\SEU-NOME\.live-interativa`), junto com seu @, a chave e as imagens dos
+presentes. Por isso **atualizar o sistema (trocar a pasta) não apaga nada seu**.
+Os arquivos da pasta `config/` são só os padrões:
 
 - `config/config.json`: tempos, pontos, nomes e cores dos times, países da
   corrida, vida do núcleo, valores dos presentes

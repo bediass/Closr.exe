@@ -6,7 +6,7 @@
 
 import express from 'express';
 import { createServer } from 'node:http';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
@@ -17,23 +17,58 @@ import { criarTradutorPresentes } from './src/traducoes.js';
 import { abrirTelaDeCaptura } from './src/navegador.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CONFIG_PATH = path.join(__dirname, 'config', 'config.json');
-const PERGUNTAS_PATH = path.join(__dirname, 'config', 'perguntas.json');
+// Padrões que vêm com o sistema (são substituídos quando você atualiza a pasta)
+const CONFIG_PADRAO_PATH = path.join(__dirname, 'config', 'config.json');
+const PERGUNTAS_PADRAO_PATH = path.join(__dirname, 'config', 'perguntas.json');
+
+// SEUS dados ficam fora da pasta do sistema, em <sua pasta de usuário>/.live-interativa,
+// pra atualizar o sistema (trocar a pasta) não apagar nada.
+const DADOS_DIR = process.env.LIVE_DADOS || path.join(os.homedir(), '.live-interativa');
+mkdirSync(DADOS_DIR, { recursive: true });
+const CONFIG_USUARIO_PATH = path.join(DADOS_DIR, 'config.json');
+const PERGUNTAS_USUARIO_PATH = path.join(DADOS_DIR, 'perguntas.json');
+const TIKTOK_LOCAL_PATH = path.join(DADOS_DIR, 'tiktok.json');
+const IMAGENS_PATH = path.join(DADOS_DIR, 'presentes-imagens.json');
+
+// Traz arquivos de versões antigas (que ficavam dentro de config/)
+for (const [antigo, novo] of [
+  [path.join(__dirname, 'config', 'tiktok.local.json'), TIKTOK_LOCAL_PATH],
+  [path.join(__dirname, 'config', 'presentes-imagens.local.json'), IMAGENS_PATH],
+]) {
+  try {
+    if (existsSync(antigo) && !existsSync(novo)) copyFileSync(antigo, novo);
+  } catch {}
+}
 
 function lerJSON(p) {
   return JSON.parse(readFileSync(p, 'utf8'));
 }
 
-// Dados da conta do TikTok (seu @ e chave) ficam num arquivo local que NÃO vai pro GitHub
-const TIKTOK_LOCAL_PATH = path.join(__dirname, 'config', 'tiktok.local.json');
+// Junta o padrão com o que você personalizou (o seu ganha; listas são trocadas inteiras)
+function mesclar(base, extra) {
+  if (Array.isArray(extra) || typeof extra !== 'object' || extra === null) return extra;
+  const saida = { ...(base && typeof base === 'object' && !Array.isArray(base) ? base : {}) };
+  for (const [k, v] of Object.entries(extra)) saida[k] = mesclar(saida[k], v);
+  return saida;
+}
 
-let config = lerJSON(CONFIG_PATH);
+let config = lerJSON(CONFIG_PADRAO_PATH);
+if (existsSync(CONFIG_USUARIO_PATH)) {
+  try {
+    config = mesclar(config, lerJSON(CONFIG_USUARIO_PATH));
+  } catch (e) {
+    console.error('Sua configuração salva está com erro e foi ignorada:', e.message);
+  }
+}
 if (existsSync(TIKTOK_LOCAL_PATH)) {
   try {
     config.tiktok = { ...(config.tiktok || {}), ...lerJSON(TIKTOK_LOCAL_PATH) };
   } catch {}
 }
-let perguntas = existsSync(PERGUNTAS_PATH) ? lerJSON(PERGUNTAS_PATH) : [];
+let perguntas = [];
+try {
+  perguntas = lerJSON(existsSync(PERGUNTAS_USUARIO_PATH) ? PERGUNTAS_USUARIO_PATH : PERGUNTAS_PADRAO_PATH);
+} catch {}
 
 const JOGOS = ['batalha', 'corrida', 'quiz', 'defesa'];
 const VERSAO = lerJSON(path.join(__dirname, 'package.json')).version;
@@ -46,7 +81,6 @@ const estado = {
 
 // Imagens dos presentes do TikTok (nome/id -> url). São preenchidas quando o sistema
 // conecta numa live de verdade e ficam guardadas no computador pra usar depois, até no simulador.
-const IMAGENS_PATH = path.join(__dirname, 'config', 'presentes-imagens.local.json');
 let imagensPresentes = {};
 if (existsSync(IMAGENS_PATH)) {
   try {
@@ -229,7 +263,7 @@ wss.on('connection', (ws) => {
           break;
         }
         config.tiktok = { ...(config.tiktok || {}), usuario, eulerApiKey: apiKey };
-        salvarConfig();
+        salvarTiktok();
         tiktok.conectar(usuario, apiKey);
         break;
       }
@@ -246,7 +280,7 @@ wss.on('connection', (ws) => {
             const p = typeof msg.perguntas === 'string' ? JSON.parse(msg.perguntas) : msg.perguntas;
             if (!Array.isArray(p)) throw new Error('perguntas.json precisa ser uma lista [ ... ]');
             perguntas = p;
-            writeFileSync(PERGUNTAS_PATH, JSON.stringify(perguntas, null, 2));
+            writeFileSync(PERGUNTAS_USUARIO_PATH, JSON.stringify(perguntas, null, 2));
           }
           salvarConfig();
           broadcast({ t: 'config', config, perguntas });
@@ -260,10 +294,16 @@ wss.on('connection', (ws) => {
   });
 });
 
+function salvarTiktok() {
+  const t = config.tiktok || {};
+  writeFileSync(TIKTOK_LOCAL_PATH, JSON.stringify({ usuario: t.usuario || '', eulerApiKey: t.eulerApiKey || '' }, null, 2));
+}
+
+// Salva o que foi editado no painel na sua pasta de dados (nunca na pasta do sistema)
 function salvarConfig() {
   const { tiktok, ...resto } = config;
-  writeFileSync(CONFIG_PATH, JSON.stringify({ ...resto, tiktok: { usuario: '', eulerApiKey: '' } }, null, 2));
-  writeFileSync(TIKTOK_LOCAL_PATH, JSON.stringify({ usuario: tiktok?.usuario || '', eulerApiKey: tiktok?.eulerApiKey || '' }, null, 2));
+  writeFileSync(CONFIG_USUARIO_PATH, JSON.stringify(resto, null, 2));
+  salvarTiktok();
 }
 
 // Mantém conexões vivas (OBS às vezes derruba sockets ociosos)
@@ -279,6 +319,7 @@ server.listen(PORTA, () => {
   console.log(`  Painel de controle:  ${base}/painel`);
   console.log(`  Tela do jogo (OBS):  ${base}/overlay`);
   for (const ip of enderecosRede()) console.log(`  No celular (mesmo Wi-Fi): http://${ip}:${PORTA}/overlay`);
+  console.log(`  Seus dados ficam em: ${DADOS_DIR}`);
   console.log('  Pra parar: Ctrl + C');
   console.log('');
 });
