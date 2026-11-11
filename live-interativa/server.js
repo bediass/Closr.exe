@@ -34,6 +34,7 @@ if (existsSync(TIKTOK_LOCAL_PATH)) {
 let perguntas = existsSync(PERGUNTAS_PATH) ? lerJSON(PERGUNTAS_PATH) : [];
 
 const JOGOS = ['batalha', 'corrida', 'quiz', 'defesa'];
+const VERSAO = lerJSON(path.join(__dirname, 'package.json')).version;
 
 const estado = {
   jogo: JOGOS.includes(config.jogoInicial) ? config.jogoInicial : 'batalha',
@@ -162,7 +163,7 @@ wss.on('connection', (ws) => {
       case 'ola': {
         ws.papel = msg.papel === 'painel' ? 'painel' : 'overlay';
         ws.preview = !!msg.preview;
-        enviar(ws, { t: 'init', estado, config, perguntas, jogos: JOGOS, imagensPresentes, enderecos: enderecosRede(), porta: PORTA });
+        enviar(ws, { t: 'init', estado, config, perguntas, jogos: JOGOS, imagensPresentes, enderecos: enderecosRede(), porta: PORTA, versao: VERSAO });
         if (ws.papel === 'painel' && (ultimoStatus || ultimoStatusPreview)) {
           enviar(ws, { t: 'statusJogo', ...(ultimoStatus || ultimoStatusPreview) });
         }
@@ -259,7 +260,7 @@ server.listen(PORTA, () => {
   const base = `http://localhost:${PORTA}`;
   console.log('');
   console.log('  ╔══════════════════════════════════════════════╗');
-  console.log('  ║          LIVE INTERATIVA — rodando           ║');
+  console.log(`  ║     LIVE INTERATIVA v${VERSAO} — rodando`.padEnd(49) + '║');
   console.log('  ╚══════════════════════════════════════════════╝');
   console.log(`  Painel de controle:  ${base}/painel`);
   console.log(`  Tela do jogo (OBS):  ${base}/overlay`);

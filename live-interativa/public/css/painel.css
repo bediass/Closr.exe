@@ -47,6 +47,7 @@ body {
 }
 .marca { font: italic 800 30px/1 var(--fonte-titulo); margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
 .marca span { background: var(--primaria); color: var(--primaria-texto); padding: 0 8px; margin-left: 4px; border-radius: 4px; }
+.marca .versao { font: 600 14px var(--fonte); color: var(--texto-suave); text-transform: none; margin-left: 8px; }
 .pilulas { display: flex; flex-wrap: wrap; gap: 8px; }
 .pilula {
   font-weight: 600; font-size: 14px; padding: 6px 12px; border-radius: 999px;

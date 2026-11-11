@@ -64,6 +64,7 @@ function conectar() {
         montarPresentes();
         preencherConfig();
         $('#tk-usuario').value = config.tiktok?.usuario || '';
+        if (msg.versao) $('#versao').textContent = `v${msg.versao}`;
         if (msg.enderecos?.length) {
           $('#url-celular').value = `http://${msg.enderecos[0]}:${msg.porta || location.port || 3000}/overlay`;
           $('#campo-celular').hidden = false;

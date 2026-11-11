@@ -29,6 +29,32 @@ function primeiraUrl(img) {
   return img.urlList?.[0] || img.url_list?.[0] || img.url?.[0] || img.urls?.[0] || null;
 }
 
+// Acha o texto do comentário em qualquer formato que a biblioteca mandar
+let avisouSemTexto = 0;
+export function textoDoComentario(d) {
+  for (const k of ['comment', 'content', 'text', 'message']) {
+    const v = d?.[k];
+    if (typeof v === 'string' && v.trim()) return v;
+    if (v && typeof v === 'object') {
+      const p = v.defaultPattern || v.default_pattern || v.text;
+      if (typeof p === 'string' && p.trim()) return p;
+    }
+  }
+  const p = d?.common?.displayText?.defaultPattern;
+  if (typeof p === 'string' && p.trim() && !p.includes('{')) return p;
+  // Não achou: mostra na janela preta quais campos vieram (só as 3 primeiras vezes)
+  if (avisouSemTexto < 3) {
+    avisouSemTexto++;
+    const resumo = {};
+    for (const [k, v] of Object.entries(d || {})) {
+      if (k === 'user' || k === 'common') continue;
+      resumo[k] = typeof v === 'string' ? v.slice(0, 60) : Array.isArray(v) ? `[lista ${v.length}]` : typeof v;
+    }
+    console.log('[tiktok] comentário chegou sem texto. Campos recebidos:', JSON.stringify(resumo));
+  }
+  return '';
+}
+
 export function normalizarUsuario(u) {
   if (!u) return { id: 'anonimo', nome: 'anônimo', avatar: null };
   const id = u.uniqueId || u.displayId || u.specialId || u.userId || u.id || 'anonimo';
@@ -122,7 +148,7 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
 
     c.on(WebcastEvent.CHAT, (d) => {
       // versões novas da biblioteca mandam o texto em 'content'; antigas em 'comment'
-      emitir({ tipo: 'comentario', usuario: normalizarUsuario(d.user), texto: String(d.comment ?? d.content ?? '') });
+      emitir({ tipo: 'comentario', usuario: normalizarUsuario(d.user), texto: textoDoComentario(d) });
     });
 
     c.on(WebcastEvent.GIFT, (d) => {
