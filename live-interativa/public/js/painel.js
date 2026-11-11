@@ -307,7 +307,10 @@ $('#abrir-captura').addEventListener('click', async (e) => {
   b.disabled = true;
   try {
     const r = await fetch('/api/abrir-tela', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then((x) => x.json());
-    if (r.ok) avisar('Tela aberta em tela cheia. Use Alt+Tab pra voltar pro painel (ela continua aberta atrás).', 'ok');
+    if (r.ok) {
+      const nome = /edge/i.test(r.navegador) ? 'msedge.exe' : 'chrome.exe';
+      avisar(`Tela aberta em tela cheia. Use Alt+Tab pra voltar. No LIVE Studio, em Captura de janela, escolha "${nome}".`, 'ok');
+    }
     else avisar('Não consegui abrir: ' + r.erro, 'erro');
   } catch {
     avisar('Não consegui falar com o servidor.', 'erro');

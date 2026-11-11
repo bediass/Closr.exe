@@ -5,16 +5,21 @@ import { existsSync, mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-function candidatos() {
+function candidatos(preferirChrome = false) {
   const env = process.env;
   if (process.platform === 'win32') {
-    return [
-      path.join(env.ProgramFiles || 'C:\\Program Files', 'Google\\Chrome\\Application\\chrome.exe'),
-      path.join(env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'Google\\Chrome\\Application\\chrome.exe'),
-      path.join(env.LOCALAPPDATA || '', 'Google\\Chrome\\Application\\chrome.exe'),
+    // Edge primeiro: o LIVE Studio lista UMA janela por programa. Se o painel estiver
+    // aberto no Chrome e a tela do jogo também, a tela do jogo some da lista.
+    const edge = [
       path.join(env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'Microsoft\\Edge\\Application\\msedge.exe'),
       path.join(env.ProgramFiles || 'C:\\Program Files', 'Microsoft\\Edge\\Application\\msedge.exe'),
     ];
+    const chrome = [
+      path.join(env.ProgramFiles || 'C:\\Program Files', 'Google\\Chrome\\Application\\chrome.exe'),
+      path.join(env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'Google\\Chrome\\Application\\chrome.exe'),
+      path.join(env.LOCALAPPDATA || '', 'Google\\Chrome\\Application\\chrome.exe'),
+    ];
+    return preferirChrome ? [...chrome, ...edge] : [...edge, ...chrome];
   }
   if (process.platform === 'darwin') {
     return [
@@ -25,8 +30,8 @@ function candidatos() {
   return ['/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
 }
 
-export function abrirTelaDeCaptura(url) {
-  const exe = candidatos().find((p) => p && existsSync(p));
+export function abrirTelaDeCaptura(url, { preferirChrome = false } = {}) {
+  const exe = candidatos(preferirChrome).find((p) => p && existsSync(p));
   if (!exe) return { ok: false, erro: 'Não achei o Google Chrome nem o Edge instalados neste computador.' };
   // Perfil separado: garante que as opções valem mesmo com o Chrome normal já aberto
   const perfil = path.join(os.homedir(), '.live-interativa', 'navegador');
