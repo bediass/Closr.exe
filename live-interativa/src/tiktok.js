@@ -121,7 +121,8 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
     const c = conexao;
 
     c.on(WebcastEvent.CHAT, (d) => {
-      emitir({ tipo: 'comentario', usuario: normalizarUsuario(d.user), texto: String(d.comment || '') });
+      // versões novas da biblioteca mandam o texto em 'content'; antigas em 'comment'
+      emitir({ tipo: 'comentario', usuario: normalizarUsuario(d.user), texto: String(d.comment ?? d.content ?? '') });
     });
 
     c.on(WebcastEvent.GIFT, (d) => {
@@ -148,7 +149,7 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
     });
 
     c.on(WebcastEvent.LIKE, (d) => {
-      emitir({ tipo: 'curtida', usuario: normalizarUsuario(d.user), curtidas: Math.max(1, Number(d.likeCount) || 1) });
+      emitir({ tipo: 'curtida', usuario: normalizarUsuario(d.user), curtidas: Math.max(1, Number(d.likeCount ?? d.count) || 1) });
     });
 
     c.on(WebcastEvent.FOLLOW, (d) => emitir({ tipo: 'seguir', usuario: normalizarUsuario(d.user) }));
@@ -156,7 +157,7 @@ export function criarConexaoTikTok({ emitir, aoMudarStatus, aoReceberPresentes =
     c.on(WebcastEvent.MEMBER, (d) => emitir({ tipo: 'entrou', usuario: normalizarUsuario(d.user) }));
 
     c.on(WebcastEvent.ROOM_USER, (d) => {
-      aoMudarStatus({ espectadores: Number(d.viewerCount) || 0 });
+      aoMudarStatus({ espectadores: Number(d.viewerCount ?? d.total) || 0 });
     });
 
     c.on(WebcastEvent.STREAM_END, () => {
