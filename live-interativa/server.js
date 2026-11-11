@@ -135,9 +135,13 @@ app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] })
 app.get('/', (_req, res) => res.redirect('/painel'));
 app.get('/api/config', (_req, res) => res.json({ config, perguntas }));
 // Botão do painel: abre a tela do jogo em tela cheia, pronta pro LIVE Studio/OBS capturar
-app.post('/api/abrir-tela', (req, res) => {
+app.post('/api/abrir-tela', async (req, res) => {
   const transparente = req.body?.transparente ? '&transparente=1' : '';
-  res.json(abrirTelaDeCaptura(`http://localhost:${PORTA}/overlay?captura=1${transparente}`));
+  try {
+    res.json(await abrirTelaDeCaptura(`http://localhost:${PORTA}/overlay?captura=1${transparente}`));
+  } catch (e) {
+    res.json({ ok: false, erro: e.message });
+  }
 });
 
 const server = createServer(app);

@@ -309,7 +309,10 @@ $('#abrir-captura').addEventListener('click', async (e) => {
     const r = await fetch('/api/abrir-tela', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then((x) => x.json());
     if (r.ok) {
       const nome = /edge/i.test(r.navegador) ? 'msedge.exe' : 'chrome.exe';
-      avisar(`Tela aberta em tela cheia. Use Alt+Tab pra voltar. No LIVE Studio, em Captura de janela, escolha "${nome}".`, 'ok');
+      const onde = r.modo === 'tela-cheia-monitor-em-pe'
+        ? 'Abri em tela cheia no seu monitor em pé.'
+        : 'Abri numa janela em pé, no lado direito da tela (não minimize, pode deixar atrás das outras).';
+      avisar(`${onde} No LIVE Studio: Captura de janela → "${nome}" → tela cheia.`, 'ok');
     }
     else avisar('Não consegui abrir: ' + r.erro, 'erro');
   } catch {

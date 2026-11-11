@@ -1,6 +1,10 @@
-// Abre a tela do jogo num Chrome (ou Edge) separado, em tela cheia, pronto pra captura:
-// sem barra de endereço, sem abas, com som liberado (sem precisar clicar).
-import { spawn } from 'node:child_process';
+// Abre a tela do jogo num navegador separado (Edge no Windows), pronta pra captura:
+// sem barra de endereço, sem abas, com som liberado.
+//
+// Formato: a live é em pé (9:16). Então:
+//  - se existir um monitor em pé (retrato), abre em TELA CHEIA nele → formato e qualidade perfeitos;
+//  - se não existir, abre numa JANELA em pé (9:16) da altura da tela → o LIVE Studio não corta nada.
+import { spawn, execFile } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -30,25 +34,75 @@ function candidatos(preferirChrome = false) {
   return ['/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
 }
 
-export function abrirTelaDeCaptura(url, { preferirChrome = false } = {}) {
+// Lista os monitores do Windows: [{ x, y, largura, altura, principal, util: {x,y,largura,altura} }]
+function listarMonitores() {
+  if (process.platform !== 'win32') return Promise.resolve([]);
+  const script =
+    'Add-Type -AssemblyName System.Windows.Forms; ' +
+    '[System.Windows.Forms.Screen]::AllScreens | ForEach-Object { ' +
+    '[pscustomobject]@{ x=$_.Bounds.X; y=$_.Bounds.Y; largura=$_.Bounds.Width; altura=$_.Bounds.Height; principal=$_.Primary; ' +
+    'ux=$_.WorkingArea.X; uy=$_.WorkingArea.Y; ul=$_.WorkingArea.Width; ua=$_.WorkingArea.Height } } | ConvertTo-Json -Compress';
+  return new Promise((resolve) => {
+    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { timeout: 8000, windowsHide: true }, (err, stdout) => {
+      if (err) return resolve([]);
+      try {
+        let dados = JSON.parse(String(stdout).trim());
+        if (!Array.isArray(dados)) dados = [dados];
+        resolve(
+          dados.map((m) => ({
+            x: m.x, y: m.y, largura: m.largura, altura: m.altura, principal: !!m.principal,
+            util: { x: m.ux, y: m.uy, largura: m.ul, altura: m.ua },
+          })),
+        );
+      } catch {
+        resolve([]);
+      }
+    });
+  });
+}
+
+export async function abrirTelaDeCaptura(url, { preferirChrome = false } = {}) {
   const exe = candidatos(preferirChrome).find((p) => p && existsSync(p));
-  if (!exe) return { ok: false, erro: 'Não achei o Google Chrome nem o Edge instalados neste computador.' };
-  // Perfil separado: garante que as opções valem mesmo com o Chrome normal já aberto
-  const perfil = path.join(os.homedir(), '.live-interativa', 'navegador');
+  if (!exe) return { ok: false, erro: 'Não achei o Microsoft Edge nem o Google Chrome instalados neste computador.' };
+
+  const monitores = await listarMonitores();
+  const emPe = monitores.find((m) => m.altura > m.largura);
+  const principal = monitores.find((m) => m.principal) || monitores[0];
+
+  const args = [`--app=${url}`];
+  let modo;
+  if (emPe) {
+    // Tela cheia no monitor em pé
+    args.push(`--window-position=${emPe.x},${emPe.y}`, `--window-size=${emPe.largura},${emPe.altura}`, '--start-fullscreen');
+    modo = 'tela-cheia-monitor-em-pe';
+  } else if (principal) {
+    // Janela em pé 9:16, da altura útil da tela, encostada na direita
+    const alt = principal.util.altura;
+    const larg = Math.round(((alt - 32) * 9) / 16); // ~32px da barra de título
+    const x = principal.util.x + principal.util.largura - larg;
+    args.push(`--window-position=${x},${principal.util.y}`, `--window-size=${larg},${alt}`);
+    modo = 'janela-em-pe';
+  } else {
+    // Não deu pra saber os monitores (Mac/Linux ou PowerShell bloqueado): janela em pé padrão
+    args.push('--window-size=600,1100');
+    modo = 'janela-em-pe';
+  }
+
+  // Perfil separado: garante que as opções valem mesmo com o navegador normal aberto,
+  // e não mexe nas suas abas/contas.
+  const perfil = path.join(os.homedir(), '.live-interativa', 'navegador-v2');
   mkdirSync(perfil, { recursive: true });
-  const args = [
-    `--app=${url}`,
-    '--start-fullscreen',
+  args.push(
     '--autoplay-policy=no-user-gesture-required',
     `--user-data-dir=${perfil}`,
     '--no-first-run',
     '--no-default-browser-check',
     '--disable-features=Translate',
-  ];
+  );
   try {
     const p = spawn(exe, args, { detached: true, stdio: 'ignore' });
     p.unref();
-    return { ok: true, navegador: path.basename(exe) };
+    return { ok: true, navegador: path.basename(exe), modo, monitores: monitores.length };
   } catch (e) {
     return { ok: false, erro: e.message };
   }
