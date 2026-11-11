@@ -138,7 +138,7 @@
     "turboExpoente": 0.6
   },
   "quiz": {
-    "tempoPergunta": 20,
+    "tempoPergunta": 30,
     "tempoRevelacao": 7,
     "pontosAcerto": 100,
     "bonusVelocidade": 100,

@@ -10,7 +10,7 @@ import {
 } from '../motor.js';
 
 const PADRAO = {
-  tempoPergunta: 20,
+  tempoPergunta: 30,
   tempoRevelacao: 7,
   pontosAcerto: 100,
   bonusVelocidade: 100,
