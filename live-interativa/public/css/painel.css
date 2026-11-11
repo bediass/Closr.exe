@@ -117,6 +117,7 @@ body {
 .btn.primario:hover { background: #F2C230; border-color: #F2C230; }
 .btn.perigo { border-color: rgba(244, 63, 94, 0.5); color: #FDA4AF; }
 .btn.perigo:hover { background: rgba(244, 63, 94, 0.15); }
+.btn.largo { width: 100%; margin-top: 12px; }
 .btn.mini { min-height: 44px; padding: 8px 12px; font-size: 14px; }
 .btn[aria-pressed="true"] { background: rgba(255, 210, 63, 0.16); border-color: var(--aviso); }
 

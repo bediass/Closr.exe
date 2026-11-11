@@ -302,6 +302,20 @@ $('#copiar-url').addEventListener('click', async () => {
   }
 });
 
+$('#abrir-captura').addEventListener('click', async (e) => {
+  const b = e.currentTarget;
+  b.disabled = true;
+  try {
+    const r = await fetch('/api/abrir-tela', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then((x) => x.json());
+    if (r.ok) avisar('Tela aberta em tela cheia. Use Alt+Tab pra voltar pro painel (ela continua aberta atrás).', 'ok');
+    else avisar('Não consegui abrir: ' + r.erro, 'erro');
+  } catch {
+    avisar('Não consegui falar com o servidor.', 'erro');
+  } finally {
+    b.disabled = false;
+  }
+});
+
 $('#copiar-celular').addEventListener('click', async () => {
   const url = $('#url-celular').value;
   try {

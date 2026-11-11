@@ -14,6 +14,7 @@ import { WebSocketServer } from 'ws';
 import { criarSimulador } from './src/simulador.js';
 import { criarConexaoTikTok } from './src/tiktok.js';
 import { criarTradutorPresentes } from './src/traducoes.js';
+import { abrirTelaDeCaptura } from './src/navegador.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CONFIG_PATH = path.join(__dirname, 'config', 'config.json');
@@ -99,6 +100,11 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 app.get('/', (_req, res) => res.redirect('/painel'));
 app.get('/api/config', (_req, res) => res.json({ config, perguntas }));
+// Botão do painel: abre a tela do jogo em tela cheia, pronta pro LIVE Studio/OBS capturar
+app.post('/api/abrir-tela', (req, res) => {
+  const transparente = req.body?.transparente ? '&transparente=1' : '';
+  res.json(abrirTelaDeCaptura(`http://localhost:${PORTA}/overlay?captura=1${transparente}`));
+});
 
 const server = createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws' });

@@ -16,6 +16,8 @@ const JOGOS = { batalha: Batalha, corrida: Corrida, quiz: Quiz, defesa: Defesa }
 const params = new URLSearchParams(location.search);
 const PREVIEW = params.get('preview') === '1';
 const GUIAS = params.get('guias') === '1';
+const CAPTURA = params.get('captura') === '1'; // aberta pelo botão do painel pra transmitir
+if (CAPTURA) document.documentElement.style.cursor = 'none';
 
 const canvas = document.getElementById('tela');
 const ctx = canvas.getContext('2d');
@@ -67,7 +69,7 @@ function criarJogo(nome) {
 
 // Navegador comum bloqueia som até alguém clicar. No OBS isso não acontece.
 function pedirSomSeNecessario() {
-  if (!motor.som.ativo) return;
+  if (!motor.som.ativo || CAPTURA) return;
   const ac = motor.som.garantir();
   if (ac && ac.state === 'suspended') {
     const btn = document.getElementById('ativar-som');
