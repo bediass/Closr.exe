@@ -9,6 +9,7 @@ import { createServer } from 'node:http';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import os from 'node:os';
 import { WebSocketServer } from 'ws';
 import { criarSimulador } from './src/simulador.js';
 import { criarConexaoTikTok } from './src/tiktok.js';
@@ -75,6 +76,20 @@ function registrarImagensPresentes(lista) {
 // Último status enviado por cada tela de jogo (pra mostrar placar no painel)
 let ultimoStatus = null;
 let ultimoStatusPreview = null;
+
+// Endereços deste computador na rede local (pra abrir a tela do jogo no celular, no mesmo Wi-Fi)
+function enderecosRede() {
+  const lista = [];
+  for (const [nome, ifs] of Object.entries(os.networkInterfaces())) {
+    for (const i of ifs || []) {
+      if (i.family !== 'IPv4' || i.internal) continue;
+      if (/^169\.254\./.test(i.address)) continue; // endereço automático sem rede
+      if (/vEthernet|VirtualBox|VMware|WSL|docker|Hyper-V/i.test(nome)) continue;
+      lista.push(i.address);
+    }
+  }
+  return lista;
+}
 
 // ---------- HTTP ----------
 const app = express();
@@ -147,7 +162,7 @@ wss.on('connection', (ws) => {
       case 'ola': {
         ws.papel = msg.papel === 'painel' ? 'painel' : 'overlay';
         ws.preview = !!msg.preview;
-        enviar(ws, { t: 'init', estado, config, perguntas, jogos: JOGOS, imagensPresentes });
+        enviar(ws, { t: 'init', estado, config, perguntas, jogos: JOGOS, imagensPresentes, enderecos: enderecosRede(), porta: PORTA });
         if (ws.papel === 'painel' && (ultimoStatus || ultimoStatusPreview)) {
           enviar(ws, { t: 'statusJogo', ...(ultimoStatus || ultimoStatusPreview) });
         }
@@ -248,6 +263,7 @@ server.listen(PORTA, () => {
   console.log('  ╚══════════════════════════════════════════════╝');
   console.log(`  Painel de controle:  ${base}/painel`);
   console.log(`  Tela do jogo (OBS):  ${base}/overlay`);
+  for (const ip of enderecosRede()) console.log(`  No celular (mesmo Wi-Fi): http://${ip}:${PORTA}/overlay`);
   console.log('  Pra parar: Ctrl + C');
   console.log('');
 });

@@ -64,6 +64,10 @@ function conectar() {
         montarPresentes();
         preencherConfig();
         $('#tk-usuario').value = config.tiktok?.usuario || '';
+        if (msg.enderecos?.length) {
+          $('#url-celular').value = `http://${msg.enderecos[0]}:${msg.porta || location.port || 3000}/overlay`;
+          $('#campo-celular').hidden = false;
+        }
         $('#tk-chave').value = config.tiktok?.eulerApiKey || '';
         break;
       case 'estado':
@@ -293,6 +297,17 @@ $('#copiar-url').addEventListener('click', async () => {
     avisar('Link copiado! Cole no OBS como "Navegador" (1080×1920).', 'ok');
   } catch {
     $('#url-overlay').select();
+    avisar('Selecionei o link — aperte Ctrl+C pra copiar.');
+  }
+});
+
+$('#copiar-celular').addEventListener('click', async () => {
+  const url = $('#url-celular').value;
+  try {
+    await navigator.clipboard.writeText(url);
+    avisar('Link copiado! Mande pro celular (WhatsApp pra você mesmo) e abra no navegador.', 'ok');
+  } catch {
+    $('#url-celular').select();
     avisar('Selecionei o link — aperte Ctrl+C pra copiar.');
   }
 });
